@@ -1,0 +1,13 @@
+
+.editor {
+  padding-bottom: 100px;
+  p:last-of-type:has(br:only-child){
+    position: relative;
+  }
+  p:last-of-type:has(br:only-child)::before {
+    position: absolute;
+    top: 0;
+    color: var(--mauve-a9);
+    content: "Press 'space' for AI, '/' for commands";
+  }
+}

@@ -1,0 +1,66 @@
+@import "@radix-ui/colors/black-alpha.css";
+@import "@radix-ui/colors/indigo.css";
+@import "@radix-ui/colors/indigo-dark.css";
+@import "@radix-ui/colors/gray.css";
+
+/* reset */
+a,
+button {
+    all: unset;
+}
+
+.ChatBox {
+    display: flex;
+    align-items: flex-start;
+    padding: 1rem;
+    width: 100%;
+    min-width: max-content;
+    background-color: var(--gray-2);
+}
+
+.ChatBoxIcon {
+    margin-left: 0.25rem;
+    margin-right: 1rem;
+    height: 1.2rem;
+    width: 1.2rem;
+    flex-shrink: 0;
+    color: var(--teal-9);
+}
+
+.ChatBoxText {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    padding: 0;
+    margin: 0;
+    font-weight: 500;
+    color: var(--gray-11);
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 500ms;
+}
+
+.ChatBoxTextSpinner {
+    height: 0.75rem;
+    width: 0.75rem;
+    animation: spin 1s linear infinite;
+    color: var(--teal-9);
+}
+
+.ChatBoxTextArea {
+    min-height: 21px;
+    width: 100%;
+    resize: none;
+    overflow-wrap: break-word;
+    border-style: none;
+    background-color: transparent;
+    padding-bottom: 0px;
+    padding-left: 0.25rem;
+    padding-right: 0.75rem;
+    padding-top: 0px;
+    font-size: 0.875rem;
+    line-height: 21px;
+    font-weight: 450;
+    color: rgb(148,163,184);
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}

@@ -1,0 +1,15 @@
+export const EVENTS = {
+  DOCUMENTS_UPDATED: "documents-updated",
+  DOCUMENTS_DELETED: "documents-deleted",
+  DOCUMENTS_CREATED: "documents-created",
+  SEARCH_RESULTS_STARTED: "search-results-started",
+  SEARCH_RESULTS_COMPLETED: "search-results-completed",
+  SEARCH_RESULTS_FAILED: "search-results-failed",
+  SEARCH_RESULTS_UPDATED: "search-results-updated",
+  SEARCH_RESULTS_DELETED: "search-results-deleted",
+  SCRAPE_CONTENT_STARTED: "scrape-content-started",
+  SCRAPE_CONTENT_COMPLETED: "scrape-content-completed",
+  SCRAPE_CONTENT_FAILED: "scrape-content-failed",
+  OUTLINE_CREATION_STARTED: "outline-creation-started",
+  OUTLINE_CREATION_COMPLETED: "outline-creation-completed",
+};

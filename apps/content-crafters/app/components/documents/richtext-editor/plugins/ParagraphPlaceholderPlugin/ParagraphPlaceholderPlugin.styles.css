@@ -1,0 +1,16 @@
+/**
+mb-4 before:float-left before:text-gray-400 before:dark:text-zinc-600 before:pointer-events-none before:h-0 before:content-[attr(data-placeholder)]
+ */
+
+.ParagraphPlaceholder{
+    margin-bottom: 1rem;
+}
+.ParagraphPlaceholder:before{
+    content: attr(data-placeholder);
+    color: var(--gray-10);
+    font-size: 1rem;
+    font-weight: 400;
+    display: block;
+    pointer-events: none;
+    height: 0;
+}

@@ -1,0 +1,22 @@
+.TextAreaTitle {
+    overflow: hidden;
+    padding: 0 2rem;
+    margin-bottom: 1rem;
+    margin-top: 2rem;
+    border-style: none;
+    outline-style: none;
+    --ring-color: transparent;
+    width: 100%;
+    font-weight: 700;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    background-color: transparent;
+    resize: none;
+    height: 40px;
+    font-size: 1.5em;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body.dark .TextAreaTitle {
+    color: var(--gray-12);
+}

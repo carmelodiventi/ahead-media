@@ -1,0 +1,27 @@
+.EditorScroller {
+    min-height: 150px;
+    max-width: 100%;
+    border: 0;
+    display: flex;
+    position: relative;
+    outline: 0;
+    z-index: 0;
+    resize: vertical;
+}
+
+.Editor {
+    flex: auto;
+    max-width: 100%;
+    position: relative;
+    resize: vertical;
+    z-index: -1;
+}
+
+.RichTextEditor {
+    display: block;
+    position: relative;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    border-style: none;
+    outline-style: none;
+}

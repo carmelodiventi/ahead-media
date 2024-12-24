@@ -1,0 +1,35 @@
+export default {
+    code: 'font-mono text-sm',
+    heading: {
+        h1: 'text-4xl font-bold mb-4',
+        h2: 'text-3xl font-bold mb-4',
+        h3: 'text-2xl font-bold mb-3',
+        h4: 'text-xl font-bold mb-3',
+        h5: 'text-lg font-bold mb-3',
+    },
+    image: 'max-w-full h-auto',
+    link: 'text-blue-500 underline',
+    list: {
+        listitem: 'list-disc list-inside',
+        nested: {
+            listitem: 'list-disc list-inside ml-4',
+        },
+        ol: 'list-decimal list-inside',
+        ul: 'list-disc list-inside',
+    },
+    ltr: 'text-left',
+    paragraph: 'mb-4',
+    placeholder: 'text-gray-500',
+    quote: 'border-l-4 border-gray-300 pl-4 italic',
+    rtl: 'text-right',
+    text: {
+        bold: 'font-bold',
+        code: 'font-mono bg-gray-100 p-1 rounded',
+        hashtag: 'text-blue-500',
+        italic: 'italic',
+        overflowed: 'truncate',
+        strikethrough: 'line-through',
+        underline: 'underline',
+        underlineStrikethrough: 'underline line-through',
+    },
+};

@@ -1,0 +1,32 @@
+.PromptEditor {
+  font-size: 1.2rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.PromptEditor-UserInput {
+  background-color: var(--gray-a2);
+  padding: 0.8rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.PromptEditor-UserInput-Textarea {
+  height: 32px;
+  border: none;
+  outline: none;
+  resize: none;
+  background: var(--gray-a9);
+  width: 100%;
+  border-radius: 4px;
+  background: none;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  font-size: 14px !important;
+  line-height: 24px !important;
+  max-height: 200px;
+}
