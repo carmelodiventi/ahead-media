@@ -1,0 +1,30 @@
+{
+  "name": "platform-cms",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/platform-cms/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "apps/platform-cms/dist",
+        "tsConfig": "apps/platform-cms/tsconfig.app.json",
+        "main": "apps/platform-cms/src/main.ts"
+      }
+    },
+    "provision": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node apps/platform-cms/dist/src/main.js --yes"
+      }
+    },
+    "new-migration": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mkdir -p src/migrations && touch src/migrations/${args.name}.ts"
+      },
+      "inputs": []
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "content-crafters",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/content-crafters",
+  "projectType": "application",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project content-crafters --web",
+  "targets": {}
+}

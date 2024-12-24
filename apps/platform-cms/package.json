@@ -1,0 +1,21 @@
+{
+  "name": "platform-cms",
+  "version": "1.0.0",
+  "main": "src/main.ts",
+  "license": "MIT",
+  "dependencies": {
+    "contentful": "^11.3.2",
+    "contentful-management": "^11.40.2",
+    "contentful-migration": "^4.26.1",
+    "dotenv": "^16.4.7",
+    "react": "^19.0.0",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.2"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.app.json"
+  }
+}
