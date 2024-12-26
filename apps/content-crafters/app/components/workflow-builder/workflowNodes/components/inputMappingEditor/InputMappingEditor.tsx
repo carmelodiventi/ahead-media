@@ -72,6 +72,7 @@ const InputMappingEditor: React.FC<InputMappingEditorProps> = ({
         ))}
         <Flex gap="2">
           <TextField.Root
+            className={"nodrag"}
             type="text"
             placeholder="Add new input"
             onKeyDown={(e) => {

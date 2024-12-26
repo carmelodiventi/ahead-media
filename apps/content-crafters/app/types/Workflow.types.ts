@@ -1,18 +1,27 @@
 import { z } from 'zod';
+import { Edge, Node, Viewport } from '@xyflow/react';
 import { OpenAIBaseInput } from '@langchain/openai';
 
-interface StreamingConfig {
-  streamer: string;
-  streamer_configuration_parameters: any;
+export interface WorkflowTemplate {
+  id?: string;
+  name: string;
+  config: WorkflowConfig;
+  nodes: (WorkflowNode | WorkflowConfigNodeType)[];
+  edges: Edge[];
+  viewport?: Viewport;
+}
+
+export enum StepType {
+  Sequential = 'sequential',
+  ForEach = 'forEach',
 }
 
 export interface RegularWorkflowStep {
   name: string;
-  type: 'sequential';
+  type: StepType;
   llmParams?: Partial<OpenAIBaseInput>;
   expectJson?: boolean;
-  zodSchema?: z.ZodTypeAny;
-  streamingConfigs?: StreamingConfig[];
+  zodSchema?: string | z.ZodTypeAny;
   stream: boolean;
   systemPrompt: string;
   userPrompt: string;
@@ -22,7 +31,7 @@ export interface RegularWorkflowStep {
 
 export interface ForEachWorkflowStep {
   name: string;
-  type: 'forEach';
+  type: StepType;
   for_each_config: {
     source: string;
     field: string;
@@ -41,29 +50,41 @@ export interface WorkflowInput {
 }
 
 export interface WorkflowConfig {
+  id: string;
   name: string;
   inputs?: Record<string, WorkflowInput>;
   steps: WorkflowStep[];
 }
 
-interface SequentialNodeData extends Record<string, unknown> {
-  name: string;
-  type: 'sequential';
-  systemPrompt: string;
-  userPrompt: string;
-  stream: boolean;
-}
+export type NodeChangeHandler<T> = (id: string, updatedData: T) => void;
 
-interface ForEachNodeData extends Record<string, unknown> {
-  name: string;
-  type: 'forEach';
-  for_each_config: {
-    source: string;
-    field: string;
-    item_input_parameter_name: string;
-  };
-  sub_step: SequentialNodeData;
-}
+export type WorkflowConfigNodeType = Node<
+  WorkflowConfig &
+    Record<string, unknown> & {
+      onChange: NodeChangeHandler<WorkflowConfig>;
+    },
+  'workflow'
+>;
 
-// Update the NodeData type to include these interfaces
-export type NodeData = SequentialNodeData | ForEachNodeData;
+export type RegularWorkflowNodeType = Node<
+  RegularWorkflowStep &
+    Record<string, unknown> & {
+      onChange: NodeChangeHandler<RegularWorkflowStep>;
+      availableInputs: string[];
+      initialWorkflowConfig?: WorkflowConfig;
+    },
+  'sequential'
+>;
+export type ForEachWorkflowNodeType = Node<
+  ForEachWorkflowStep &
+    Record<string, unknown> & {
+      onChange: NodeChangeHandler<RegularWorkflowStep>;
+      availableInputs: string[];
+  initialWorkflowConfig?: WorkflowConfig;
+    },
+  'forEach'
+>;
+export type WorkflowNode =
+  | WorkflowConfigNodeType
+  | RegularWorkflowNodeType
+  | ForEachWorkflowNodeType;
