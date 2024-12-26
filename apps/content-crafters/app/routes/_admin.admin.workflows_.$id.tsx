@@ -114,10 +114,11 @@ export default function Workflows() {
     nodes: WorkflowNode[],
     edges: Edge[]
   ): string[] => {
+
     const connectedNodes = edges.reduce<WorkflowNode[]>((acc, edge) => {
       if (edge.target === targetNodeId) {
         const sourceNode = nodes.find((node) => node.id === edge.source);
-        if (sourceNode) {
+        if (sourceNode && sourceNode.type !== 'workflow') { // Exclude Workflow Config node
           acc.push(sourceNode);
         }
       }

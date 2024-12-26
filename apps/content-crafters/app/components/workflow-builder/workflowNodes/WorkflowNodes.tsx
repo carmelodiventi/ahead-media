@@ -87,6 +87,8 @@ export const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
     (input) =>
       !Object.keys(data.initialWorkflowConfig?.inputs || {}).includes(input)
   );
+  const initialInputs = Object.keys(initialWorkflowConfig?.inputs || {});
+  const availableStepInputs = availableInputs.filter(input => !initialInputs.includes(input));
 
   const [name, setName] = useState(data.name);
   const [systemPrompt, setSystemPrompt] = useState(data.systemPrompt);
@@ -179,7 +181,7 @@ export const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
           defaultValue={['']}
           columns={{ initial: '1', sm: '3' }}
         >
-          {Object.keys(initialWorkflowConfig?.inputs || {}).map((inputName) => (
+          {initialInputs.map((inputName) => (
             <CheckboxCards.Item value={inputName} key={inputName}>
               <Flex direction="column" width="100%">
                 <Text weight="bold"> {inputName} </Text>
