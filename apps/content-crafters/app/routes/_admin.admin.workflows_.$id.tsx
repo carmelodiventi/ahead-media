@@ -7,15 +7,17 @@ import {
   addEdge,
   Background,
   Controls,
-  Edge,
   MiniMap,
   OnConnect,
   ReactFlow,
   ReactFlowInstance,
-  useNodesState,
   NodeTypes,
-  useEdgesState,
   Node,
+  applyNodeChanges,
+  applyEdgeChanges,
+  Edge,
+  EdgeChange,
+  NodeChange,
 } from '@xyflow/react';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -26,18 +28,14 @@ import {
   RegularWorkflowStep,
   StepType,
   WorkflowConfig,
-  WorkflowConfigNodeType,
   WorkflowNode,
   WorkflowTemplate,
 } from '../types/Workflow.types';
-import {
-  ForEachNode,
-  SequentialNode,
-  WorkflowConfigNode,
-} from '../components/workflow-builder/workflowNodes';
 import Toolbar from '../components/workflow-builder/toolbar';
-import { CustomEdge } from '../components/workflow-builder/workflowNodes/WorkflowNodes';
-import {Panel} from "reactflow";
+import SequentialNode from '../components/workflow-builder/customNodes/sequentialNode';
+import ForEachNode from '../components/workflow-builder/customNodes/forEachNode';
+import CustomEdge from '../components/workflow-builder/customEdges/customeEdge';
+import { useWorkflowStore } from '../store/workflowStore';
 
 export const loader: LoaderFunction = async ({ request }) => {
   try {
@@ -60,102 +58,97 @@ export const loader: LoaderFunction = async ({ request }) => {
 };
 
 const nodeTypes: NodeTypes = {
-  workflow: WorkflowConfigNode,
   sequential: SequentialNode,
   forEach: ForEachNode,
 };
 
+const edgeTypes = { workflow: CustomEdge };
+
 export default function Workflows() {
   const { workflow }: { workflow: WorkflowTemplate } =
     useLoaderData<typeof loader>();
+  const {
+    nodes,
+    edges,
+    setNodes,
+    setEdges,
+    workflowConfig,
+    setWorkflowConfig,
+  } = useWorkflowStore();
 
-  const initialWorkflowConfig: WorkflowConfig = workflow
-    ? workflow.config
-    : { id: uuidv4(), name: 'New Workflow', inputs: {}, steps: [] };
-
-  const [workflowConfig, setWorkflowConfig] = useState<WorkflowConfig>(
-    initialWorkflowConfig
-  );
-
-  const onWorkflowConfigChange: NodeChangeHandler<WorkflowConfig> = useCallback(
-    (id, updatedConfig) => {
-      setWorkflowConfig(updatedConfig);
+  const handleNodesChange = useCallback(
+    (changes: NodeChange<WorkflowNode>[]) => {
+      const newNodes = applyNodeChanges(changes, nodes);
+      setNodes(newNodes);
     },
-    []
+    [nodes, setNodes]
   );
 
-  const initialNodes: Node[] = workflow
-    ? workflow.nodes
-    : [
-        {
-          id: uuidv4(),
-          type: 'workflow',
-          position: { x: 0, y: 0 },
-          data: { ...initialWorkflowConfig, onChange: onWorkflowConfigChange },
-        },
-      ];
+  const handleEdgesChange = useCallback(
+    (changes: EdgeChange<Edge>[]) => {
+      const newEdges = applyEdgeChanges(changes, edges);
+      setEdges(newEdges);
+    },
+    [edges, setEdges]
+  );
 
-  const initialEdges = workflow ? workflow.edges : [];
-  const edgeTypes = useMemo(() => ({ workflow: CustomEdge }), []);
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance | null>(null);
 
-  const onNodeChange: NodeChangeHandler<
-    RegularWorkflowStep | ForEachWorkflowStep
-  > = useCallback((id, updatedData) => {
-    setNodes(
-      (prevNodes) =>
-        prevNodes.map((node) =>
-          node.id === id ? { ...node, data: updatedData } : node
-        ) as WorkflowNode[]
-    );
-  }, []);
+  const onNodeChange: NodeChangeHandler<RegularWorkflowStep | ForEachWorkflowStep> = useCallback(
+    (id, updatedData) => {
+      // // Build the new array of nodes by mapping over the current nodes array
+      // const newNodes = nodes.map((n) =>
+      //   n.id === id ? { ...n, data: updatedData } : n
+      // );
+      // // Pass the new array to setNodes
+      // // @ts-ignore
+      // setNodes(newNodes);
 
-  const getAvailableInputs = (
-    targetNodeId: string,
-    nodes: Node[],
-    edges: Edge[]
-  ): string[] => {
-    const connectedNodes = edges.reduce<Node[]>((acc, edge) => {
-      if (edge.target === targetNodeId) {
-        const sourceNode = nodes.find((node) => node.id === edge.source);
-        if (sourceNode && sourceNode.type !== 'workflow') {
-          // Exclude Workflow Config node
-          acc.push(sourceNode);
+      // Then your config logic can do direct as well (unless you want a callback):
+      const newConfig: WorkflowConfig = {
+        ...workflowConfig,
+        variables: { ...workflowConfig.variables },
+      };
+
+      if (updatedData.type === StepType.Sequential) {
+        const updatedNodeData = updatedData as RegularWorkflowStep;
+        if (updatedNodeData.variables) {
+          Object.entries(updatedNodeData.variables).forEach(([k, v]) => {
+            // Merge v into newConfig.variables?
+            (newConfig.variables as any)[k] = v;
+          });
         }
       }
-      return acc;
-    }, []);
+      setWorkflowConfig(newConfig);
+    },
+    [nodes, workflowConfig, setNodes, setWorkflowConfig]
+  );
 
-    return connectedNodes.flatMap((node) => {
-      const outputs = [node.data.name];
-      if ('usesInputs' in node.data) {
-        // Check for usesInputs instead
-        outputs.push(...(node.data.usesInputs as Array<string>)); //  Access usesInputs
-      }
-      return outputs;
-    }) as string[];
-  };
+  const onConnect: OnConnect = useCallback(
+    (params) => {
+      const newEdges = addEdge({ ...params, type: 'workflow' }, edges);
+      setEdges(newEdges);
+    },
+    [edges, setEdges]
+  );
 
-  const onConnect: OnConnect = useCallback((params) => {
-    setEdges((eds) => addEdge({ ...params, type: 'workflow' }, eds)); // Add type to the connection
-  }, []);
-
+  // 6) Utility: getYpos
   const getYpos = useCallback((prevNodes: Node[]) => {
     return prevNodes.length > 0
       ? Math.max(...prevNodes.map((n) => n.position.y)) + 100
       : 100;
   }, []);
 
+  // 7) addSequentialNode
   const addSequentialNode = useCallback(() => {
-    const newNodeId = uuidv4();
+    const id = uuidv4();
     const newNode: RegularWorkflowNodeType = {
-      id: newNodeId,
+      id,
       type: StepType.Sequential,
       position: { x: 100, y: getYpos(nodes) },
       data: {
+        id,
         name: 'New Sequential Step',
         type: StepType.Sequential,
         systemPrompt: '',
@@ -163,20 +156,19 @@ export default function Workflows() {
         stream: false,
         expectJson: false,
         zodSchema: '',
-        availableInputs: [],
+        inputMapping: {},
+        stepOutput: '',
         onChange: onNodeChange,
       },
     };
-
-    setNodes((prevNodes: Node[]) => [
-      ...(prevNodes as WorkflowNode[]),
-      newNode as unknown as WorkflowNode,
-    ]);
+    setNodes([...nodes, newNode]);
   }, [getYpos, nodes, onNodeChange, setNodes]);
 
+  // 8) addForEachNode
   const addForEachNode = useCallback(() => {
+    const id = uuidv4();
     const newNode: ForEachWorkflowNodeType = {
-      id: uuidv4(),
+      id,
       type: StepType.ForEach,
       position: { x: 100, y: getYpos(nodes) },
       data: {
@@ -188,109 +180,63 @@ export default function Workflows() {
           item_input_parameter_name: '',
         },
         sub_step: {
+          id,
           name: 'New Sequential Sub Step',
           type: StepType.Sequential,
           systemPrompt: '',
           userPrompt: '',
           stream: false,
           expectJson: false,
+          inputMapping: {},
           zodSchema: '',
+          stepOutput: '',
         },
         availableInputs: [],
         onChange: onNodeChange,
       },
     };
-    setNodes((prevNodes: Node[]) => [
-      ...(prevNodes as WorkflowNode[]),
-      newNode as unknown as WorkflowNode,
-    ]);
+    setNodes([...nodes, newNode]);
   }, [getYpos, nodes, onNodeChange, setNodes]);
 
-  const updatedNodes = nodes.map((node) => {
-    if (node.type !== 'workflow') {
-      return {
-        ...node,
-        // availableInputs set when each node is rendered, using current nodes and edges, this allows dynamic updates
-        data: {
-          ...node.data,
-          initialWorkflowConfig: workflowConfig,
-          availableInputs: getAvailableInputs(node.id, nodes, edges),
-          onChange: onNodeChange, // onNodeChange handles the updating logic for each node type
-        },
-      };
-    }
-
-    return node;
-  }) as WorkflowNode[];
-
-  const configNode = updatedNodes.find((n) => n.type === 'workflow');
-
-  const allNodes = configNode
-    ? updatedNodes // Config node exists, return normal nodes
-    : [
-        {
-          id: 'workflow-config',
-          type: 'workflow',
-          position: { x: 0, y: 0 },
-          data: { ...workflowConfig, onChange: onWorkflowConfigChange }, //Correct data goes here
-        } as WorkflowConfigNodeType, // Correct type assertion
-        ...updatedNodes, //Add other nodes to the array
-      ];
-
+  // 9) onSave
   const onSave = useCallback(() => {
     if (!reactFlowInstance) return;
-
     const flow = reactFlowInstance.toObject();
 
     const workflowToSave = {
-      id: workflow?.id, // Existing ID or undefined if new
+      id: workflow?.id,
       name: workflowConfig.name,
       config: workflowConfig,
-      nodes: nodes
-        .filter((node) => node.type !== 'workflow')
-        .map((node) => {
-          const {
-            availableInputs,
-            onChange,
-            initialWorkflowConfig,
-            ...restOfData
-          } = node.data;
-          return {
-            ...node,
-            data: restOfData,
-          };
-        }) as unknown as Node[],
-      edges: flow.edges.map((edge) => {
-        if (
-          nodes.find((node) => node.id === edge.source)?.type === 'workflow'
-        ) {
-          return {
-            ...edge,
-            source: 'workflow-config',
-            id: `reactflow__edge-workflow-config-${edge.target}`,
-          };
-        }
-        return edge;
-      }) as Edge[],
+      nodes: nodes.map((node) => {
+        const { availableInputs, onChange, ...restOfData } = node.data;
+        return {
+          ...node,
+          data: restOfData,
+        };
+      }),
+      edges: flow.edges,
       viewport: flow.viewport,
     };
+
     console.log('Workflow to save:', workflowToSave);
-    // Send workflowToSave to your database or storage
+    console.log('Workflow JSON:', JSON.stringify(workflowToSave, null, 2));
+    // send it somewhere
   }, [reactFlowInstance, workflow, workflowConfig, nodes, edges]);
 
+  // 10) Return the React Flow
   return (
-    <div style={{ width: 'calc("100vw-250px")', height: '100vh' }}>
+    <div style={{ width: 'calc("100vw - 250px")', height: '100vh' }}>
       <Toolbar
         onSave={onSave}
         addSequentialNode={addSequentialNode}
         addForEachNode={addForEachNode}
       />
       <ReactFlow
-        nodes={allNodes}
+        nodes={nodes}
         edges={edges}
+        onNodesChange={handleNodesChange as any}
+        onEdgesChange={handleEdgesChange}
         edgeTypes={edgeTypes}
-        onNodesChange={onNodesChange as any}
-        onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView

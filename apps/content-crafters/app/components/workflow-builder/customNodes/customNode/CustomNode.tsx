@@ -1,8 +1,8 @@
 import { memo } from 'react';
 import { Position } from '@xyflow/react';
 import { Node } from './CustomNode.styles';
-import CustomHandle from '../customHandle';
 import {useTheme} from "next-themes";
+import CustomHandle from "../../customHandle";
 
 interface CustomNodeProps {
   data: {

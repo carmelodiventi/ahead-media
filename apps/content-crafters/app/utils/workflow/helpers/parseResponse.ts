@@ -1,4 +1,5 @@
 import { RegularWorkflowStep } from '../../../types/Workflow.types';
+import {ZodTypeAny} from "zod";
 
 export function parseResponse(
   response: string,
@@ -25,7 +26,7 @@ export function parseResponse(
 
     const parsedJson = JSON.parse(extractedJson); // Parse the extracted JSON
     return stepConfig.zodSchema
-      ? stepConfig.zodSchema.parse(parsedJson)
+      ? (stepConfig.zodSchema as ZodTypeAny).parse(parsedJson)
       : parsedJson; // Validate with Zod if schema exists
   } catch (error) {
     console.error('JSON parsing error:', error);
