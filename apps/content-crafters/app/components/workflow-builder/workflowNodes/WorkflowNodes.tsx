@@ -9,7 +9,6 @@ import {
   Flex,
   Switch,
   Heading,
-  Select,
   CheckboxCards,
 } from '@radix-ui/themes';
 import InputsEditor from './components/inputsEditor';
@@ -21,6 +20,44 @@ import {
   WorkflowConfigNodeType,
   WorkflowInput,
 } from '../../../types/Workflow.types';
+import { EdgeProps } from 'reactflow';
+import CustomHandle from '../customHandle';
+import CustomNode from '../customNode/CustomNode';
+
+export const CustomEdge = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  style,
+  markerEnd,
+}: EdgeProps) => {
+  const edgePath = `M ${sourceX},${sourceY} L ${targetX},${targetY}`; // Simple path drawing logic
+
+  return (
+    <>
+      <path
+        id={id}
+        style={style}
+        className="react-flow__edge-path"
+        d={edgePath}
+        markerEnd={markerEnd}
+      />
+      {/* Your label here, position it accordingly using transform translate, or rotate */}
+      <Text
+        style={{
+          marginLeft: 10,
+          marginTop: -20,
+          position: 'absolute',
+          transform: 'rotate(-25deg)',
+        }}
+      >
+        Workflow edge
+      </Text>
+    </>
+  );
+};
 
 export const WorkflowConfigNode: React.FC<NodeProps<WorkflowConfigNodeType>> = (
   props
@@ -53,15 +90,23 @@ export const WorkflowConfigNode: React.FC<NodeProps<WorkflowConfigNodeType>> = (
   );
 
   return (
-    <Card>
-      <Heading size={'2'}>Workflow Config</Heading>
-      <Text size={'1'} color={'gray'}>
-        Add the workflow configuration
-      </Text>
-      <Grid gap={'2'} columns={'2'} mt={'4'}>
+    <CustomNode
+      data={{
+        label: 'Workflow Config',
+        description: 'Configure the workflow',
+        handles: {
+          source: {
+            show: true,
+            connectionCount: 1,
+          },
+        },
+      }}
+    >
+      <Grid gap={'2'} columns={'1'} mt={'4'}>
         <Text size={'2'}>Name</Text>
         <TextField.Root
           type="text"
+          size={"1"}
           placeholder="Name"
           className="nodrag"
           value={workflowConfig.name}
@@ -72,8 +117,12 @@ export const WorkflowConfigNode: React.FC<NodeProps<WorkflowConfigNodeType>> = (
         inputs={workflowConfig.inputs}
         onChange={handleInputsChange}
       />
-      <Handle type="source" position={Position.Right} />
-    </Card>
+      <CustomHandle
+        type="source"
+        position={Position.Right}
+        connectionCount={1}
+      />
+    </CustomNode>
   );
 };
 
@@ -88,7 +137,9 @@ export const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
       !Object.keys(data.initialWorkflowConfig?.inputs || {}).includes(input)
   );
   const initialInputs = Object.keys(initialWorkflowConfig?.inputs || {});
-  const availableStepInputs = availableInputs.filter(input => !initialInputs.includes(input));
+  const availableStepInputs = availableInputs.filter(
+    (input) => !initialInputs.includes(input)
+  );
 
   const [name, setName] = useState(data.name);
   const [systemPrompt, setSystemPrompt] = useState(data.systemPrompt);
@@ -146,9 +197,22 @@ export const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
   };
 
   return (
-    <Card>
-      <Handle type="target" position={Position.Left} />
-
+    <CustomNode
+      data={{
+        label: 'Sequential Step',
+        description: 'Step in the workflow and is executed sequentially',
+        handles: {
+          source: {
+            show: true,
+            connectionCount: 1,
+          },
+          target: {
+            show: true,
+            connectionCount: 1,
+          },
+        },
+      }}
+    >
       <Grid gap={'4'} align={'start'}>
         <Text size={'2'}>Name:</Text>
         <TextField.Root
@@ -273,9 +337,7 @@ export const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
           nodeId={id}
         />
       </Grid>
-
-      <Handle type="source" position={Position.Right} />
-    </Card>
+    </CustomNode>
   );
 };
 

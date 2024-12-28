@@ -1,5 +1,5 @@
 import '@xyflow/react/dist/style.css';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { LoaderFunction } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import { createSupabaseServerClient } from '../utils/supabase.server';
@@ -15,6 +15,7 @@ import {
   useNodesState,
   NodeTypes,
   useEdgesState,
+  Node,
 } from '@xyflow/react';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -35,6 +36,8 @@ import {
   WorkflowConfigNode,
 } from '../components/workflow-builder/workflowNodes';
 import Toolbar from '../components/workflow-builder/toolbar';
+import { CustomEdge } from '../components/workflow-builder/workflowNodes/WorkflowNodes';
+import {Panel} from "reactflow";
 
 export const loader: LoaderFunction = async ({ request }) => {
   try {
@@ -81,7 +84,7 @@ export default function Workflows() {
     []
   );
 
-  const initialNodes: (WorkflowNode | WorkflowConfigNodeType)[] = workflow
+  const initialNodes: Node[] = workflow
     ? workflow.nodes
     : [
         {
@@ -91,8 +94,9 @@ export default function Workflows() {
           data: { ...initialWorkflowConfig, onChange: onWorkflowConfigChange },
         },
       ];
-  const initialEdges = workflow ? workflow.edges : [];
 
+  const initialEdges = workflow ? workflow.edges : [];
+  const edgeTypes = useMemo(() => ({ workflow: CustomEdge }), []);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] =
@@ -111,14 +115,14 @@ export default function Workflows() {
 
   const getAvailableInputs = (
     targetNodeId: string,
-    nodes: WorkflowNode[],
+    nodes: Node[],
     edges: Edge[]
   ): string[] => {
-
-    const connectedNodes = edges.reduce<WorkflowNode[]>((acc, edge) => {
+    const connectedNodes = edges.reduce<Node[]>((acc, edge) => {
       if (edge.target === targetNodeId) {
         const sourceNode = nodes.find((node) => node.id === edge.source);
-        if (sourceNode && sourceNode.type !== 'workflow') { // Exclude Workflow Config node
+        if (sourceNode && sourceNode.type !== 'workflow') {
+          // Exclude Workflow Config node
           acc.push(sourceNode);
         }
       }
@@ -139,7 +143,7 @@ export default function Workflows() {
     setEdges((eds) => addEdge({ ...params, type: 'workflow' }, eds)); // Add type to the connection
   }, []);
 
-  const getYpos = useCallback((prevNodes: WorkflowNode[]) => {
+  const getYpos = useCallback((prevNodes: Node[]) => {
     return prevNodes.length > 0
       ? Math.max(...prevNodes.map((n) => n.position.y)) + 100
       : 100;
@@ -164,7 +168,7 @@ export default function Workflows() {
       },
     };
 
-    setNodes((prevNodes: WorkflowNode[]) => [
+    setNodes((prevNodes: Node[]) => [
       ...(prevNodes as WorkflowNode[]),
       newNode as unknown as WorkflowNode,
     ]);
@@ -196,7 +200,7 @@ export default function Workflows() {
         onChange: onNodeChange,
       },
     };
-    setNodes((prevNodes: WorkflowNode[]) => [
+    setNodes((prevNodes: Node[]) => [
       ...(prevNodes as WorkflowNode[]),
       newNode as unknown as WorkflowNode,
     ]);
@@ -235,9 +239,44 @@ export default function Workflows() {
 
   const onSave = useCallback(() => {
     if (!reactFlowInstance) return;
+
     const flow = reactFlowInstance.toObject();
-    console.log('Workflow to save:', JSON.stringify(flow, null, 2));
-  }, [reactFlowInstance, workflowConfig, nodes]);
+
+    const workflowToSave = {
+      id: workflow?.id, // Existing ID or undefined if new
+      name: workflowConfig.name,
+      config: workflowConfig,
+      nodes: nodes
+        .filter((node) => node.type !== 'workflow')
+        .map((node) => {
+          const {
+            availableInputs,
+            onChange,
+            initialWorkflowConfig,
+            ...restOfData
+          } = node.data;
+          return {
+            ...node,
+            data: restOfData,
+          };
+        }) as unknown as Node[],
+      edges: flow.edges.map((edge) => {
+        if (
+          nodes.find((node) => node.id === edge.source)?.type === 'workflow'
+        ) {
+          return {
+            ...edge,
+            source: 'workflow-config',
+            id: `reactflow__edge-workflow-config-${edge.target}`,
+          };
+        }
+        return edge;
+      }) as Edge[],
+      viewport: flow.viewport,
+    };
+    console.log('Workflow to save:', workflowToSave);
+    // Send workflowToSave to your database or storage
+  }, [reactFlowInstance, workflow, workflowConfig, nodes, edges]);
 
   return (
     <div style={{ width: 'calc("100vw-250px")', height: '100vh' }}>
@@ -249,6 +288,7 @@ export default function Workflows() {
       <ReactFlow
         nodes={allNodes}
         edges={edges}
+        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange as any}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -256,6 +296,10 @@ export default function Workflows() {
         fitView
         fitViewOptions={{ padding: 2 }}
         onInit={setReactFlowInstance}
+        defaultEdgeOptions={{
+          type: 'workflow',
+          animated: true,
+        }}
       >
         <Controls />
         <MiniMap />

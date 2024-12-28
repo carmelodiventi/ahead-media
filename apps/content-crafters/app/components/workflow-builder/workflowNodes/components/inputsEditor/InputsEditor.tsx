@@ -66,14 +66,18 @@ const InputsEditor: React.FC<InputsEditorProps> = ({ inputs, onChange }) => {
 
   return (
     <Flex direction="column" gap="2" mt={'4'}>
+
       <Heading size="2">Initial inputs</Heading>
 
       {Object.entries(currentInputs).map(([inputName, input]) => (
-        <Flex direction="column" gap="2" key={inputName}>
-          <Heading size={'3'} className={'nodrag'}>
+        <Flex direction="column" gap="2" key={inputName} my={"2"} p={"3"} style={{
+          borderRadius: '4px',
+          border: "1px solid var(--gray-6)"
+        }}>
+          <Text size={'2'} className={'nodrag'}>
             {inputName}
-          </Heading>
-          <Grid gap="2" columns={'4'} align="center" mb="2">
+          </Text>
+          <Grid gap="2" align="center" mb="2">
             <Select.Root
               size="1"
               value={input.type}

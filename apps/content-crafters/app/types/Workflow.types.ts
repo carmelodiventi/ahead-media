@@ -6,7 +6,7 @@ export interface WorkflowTemplate {
   id?: string;
   name: string;
   config: WorkflowConfig;
-  nodes: (WorkflowNode | WorkflowConfigNodeType)[];
+  nodes: Node[];
   edges: Edge[];
   viewport?: Viewport;
 }

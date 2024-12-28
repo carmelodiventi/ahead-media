@@ -1827,7 +1827,7 @@
     classcat "^5.0.3"
     zustand "^4.4.1"
 
-"@reactflow/core@11.11.4":
+"@reactflow/core@11.11.4", "@reactflow/core@^11.11.4":
   version "11.11.4"
   resolved "https://registry.yarnpkg.com/@reactflow/core/-/core-11.11.4.tgz#89bd86d1862aa1416f3f49926cede7e8c2aab6a7"
   integrity sha512-H4vODklsjAq3AMq6Np4LE12i1I4Ta9PrDHuBR9GmL8uzTt2l2jh4CiQbEMpvMDcp7xi4be0hgXj+Ysodde/i7Q==
