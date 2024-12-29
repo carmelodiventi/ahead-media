@@ -7,7 +7,7 @@ const InputPrompt: React.FC<{
   label: string;
   placeholder?: string;
   prompt: string;
-  setPrompt: React.Dispatch<React.SetStateAction<string>>;
+  setPrompt: (prompt: string) => void;
 }> = ({ label, placeholder, prompt, setPrompt }) => {
   const [showPromptModal, setShowPromptModal] = React.useState(false);
 

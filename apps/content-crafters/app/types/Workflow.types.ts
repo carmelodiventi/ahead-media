@@ -107,7 +107,6 @@ export type NodeChangeHandler<T> = (id: string, updatedData: T) => void;
 export type RegularWorkflowNodeType = Node<
   RegularWorkflowStep &
     Record<string, unknown> & {
-      onChange: NodeChangeHandler<RegularWorkflowStep>;
       inputMapping: Record<string, string>;
       outputMapping?: Record<string, string>;
     },
@@ -120,7 +119,6 @@ export type RegularWorkflowNodeType = Node<
 export type ForEachWorkflowNodeType = Node<
   ForEachWorkflowStep &
     Record<string, unknown> & {
-      onChange: NodeChangeHandler<RegularWorkflowStep>;
       inputMapping?: Record<string, string>;
       outputMapping?: Record<string, string>;
     },

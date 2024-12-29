@@ -4,7 +4,7 @@ import { extractVariables } from '../../../utils/extractVariables';
 
 interface PromptModalProps {
   prompt: string;
-  setPrompt: React.Dispatch<React.SetStateAction<string>>;
+  setPrompt: (prompt: string) => void;
   setShowPromptModal: React.Dispatch<React.SetStateAction<boolean>>;
   showPromptModal: boolean;
 }
@@ -42,13 +42,13 @@ const PromptModal: React.FC<PromptModalProps> = ({
             Prompt Variables:
             <Flex gap="2" mt="2">
               <Text size="2">Required:</Text>{' '}
-              {extractVariables(prompt).required.map((v) => (
+              {extractVariables(prompt)?.required?.map((v) => (
                 <Badge>{v}</Badge>
               ))}
             </Flex>
             <Flex gap="2" mt="2">
               <Text size="2">Optional:</Text>{' '}
-              {extractVariables(prompt).optional.map((v) => (
+              {extractVariables(prompt)?.optional?.map((v) => (
                 <Badge>{v}</Badge>
               ))}
             </Flex>

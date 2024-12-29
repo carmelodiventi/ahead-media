@@ -5,7 +5,7 @@ import * as Select from '@radix-ui/react-select';
 interface MappingEditorProps {
   label: string; // e.g. "Input Mapping" or "Output Mapping"
   mapping: Record<string, string>;
-  setMapping: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  setMapping: (value: Record<string, string>) => void;
   variablePlaceholder?: string; // placeholder for the key (e.g. "Enter prompt var...")
   sourcePlaceholder?: string; // placeholder for the value (e.g. "Source or alias...")
   readOnlyKeys?: boolean; // whether the keys (object keys) are read-only
@@ -28,29 +28,27 @@ const MappingEditor: React.FC<MappingEditorProps> = ({
 }) => {
   // Handler to update a mapping entry
   const handleChange = (key: string, value: string) => {
-    setMapping((prev) => ({
-      ...prev,
+    setMapping({
+      ...mapping,
       [key]: value,
-    }));
+    });
   };
 
   // Handler to remove a mapping entry
   const handleDelete = (key: string) => {
-    setMapping((prev) => {
-      const newMapping = { ...prev };
-      delete newMapping[key];
-      return newMapping;
-    });
+    const newMapping = { ...mapping };
+    delete newMapping[key];
+    setMapping(newMapping);
   };
 
   // Handler to add a new mapping entry
   const handleAddKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && e.currentTarget.value.trim() !== '') {
       const newKey = e.currentTarget.value.trim();
-      setMapping((prev) => ({
-        ...prev,
+      setMapping({
+        ...mapping,
         [newKey]: '',
-      }));
+      });
       e.currentTarget.value = '';
     }
   };

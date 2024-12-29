@@ -1,41 +1,30 @@
 import '@xyflow/react/dist/style.css';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { LoaderFunction } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import { createSupabaseServerClient } from '../utils/supabase.server';
 import {
-  addEdge,
   Background,
   Controls,
   MiniMap,
-  OnConnect,
+  Node,
+  NodeTypes,
   ReactFlow,
   ReactFlowInstance,
-  NodeTypes,
-  Node,
-  applyNodeChanges,
-  applyEdgeChanges,
-  Edge,
-  EdgeChange,
-  NodeChange,
 } from '@xyflow/react';
 import { v4 as uuidv4 } from 'uuid';
 import {
   ForEachWorkflowNodeType,
-  ForEachWorkflowStep,
-  NodeChangeHandler,
   RegularWorkflowNodeType,
-  RegularWorkflowStep,
   StepType,
-  WorkflowConfig,
-  WorkflowNode,
   WorkflowTemplate,
 } from '../types/Workflow.types';
 import Toolbar from '../components/workflow-builder/toolbar';
 import SequentialNode from '../components/workflow-builder/customNodes/sequentialNode';
 import ForEachNode from '../components/workflow-builder/customNodes/forEachNode';
 import CustomEdge from '../components/workflow-builder/customEdges/customeEdge';
-import { useWorkflowStore } from '../store/workflowStore';
+import { useShallow } from 'zustand/react/shallow';
+import useWorkflowStore, { WorkflowState } from '../store/workflowStore';
 
 export const loader: LoaderFunction = async ({ request }) => {
   try {
@@ -64,6 +53,18 @@ const nodeTypes: NodeTypes = {
 
 const edgeTypes = { workflow: CustomEdge };
 
+const selector = (state: WorkflowState) => ({
+  nodes: state.nodes,
+  edges: state.edges,
+  setNodes: state.setNodes,
+  setEdges: state.setEdges,
+  workflowConfig: state.workflowConfig,
+  setWorkflowConfig: state.setWorkflowConfig,
+  onConnect: state.onConnect,
+  onNodesChange: state.onNodesChange,
+  onEdgesChange: state.onEdgesChange,
+});
+
 export default function Workflows() {
   const { workflow }: { workflow: WorkflowTemplate } =
     useLoaderData<typeof loader>();
@@ -71,76 +72,21 @@ export default function Workflows() {
     nodes,
     edges,
     setNodes,
-    setEdges,
     workflowConfig,
-    setWorkflowConfig,
-  } = useWorkflowStore();
-
-  const handleNodesChange = useCallback(
-    (changes: NodeChange<WorkflowNode>[]) => {
-      const newNodes = applyNodeChanges(changes, nodes);
-      setNodes(newNodes);
-    },
-    [nodes, setNodes]
-  );
-
-  const handleEdgesChange = useCallback(
-    (changes: EdgeChange<Edge>[]) => {
-      const newEdges = applyEdgeChanges(changes, edges);
-      setEdges(newEdges);
-    },
-    [edges, setEdges]
-  );
+    onConnect,
+    onNodesChange,
+    onEdgesChange,
+  } = useWorkflowStore(useShallow(selector));
 
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance | null>(null);
 
-  const onNodeChange: NodeChangeHandler<RegularWorkflowStep | ForEachWorkflowStep> = useCallback(
-    (id, updatedData) => {
-      // // Build the new array of nodes by mapping over the current nodes array
-      // const newNodes = nodes.map((n) =>
-      //   n.id === id ? { ...n, data: updatedData } : n
-      // );
-      // // Pass the new array to setNodes
-      // // @ts-ignore
-      // setNodes(newNodes);
-
-      // Then your config logic can do direct as well (unless you want a callback):
-      const newConfig: WorkflowConfig = {
-        ...workflowConfig,
-        variables: { ...workflowConfig.variables },
-      };
-
-      if (updatedData.type === StepType.Sequential) {
-        const updatedNodeData = updatedData as RegularWorkflowStep;
-        if (updatedNodeData.variables) {
-          Object.entries(updatedNodeData.variables).forEach(([k, v]) => {
-            // Merge v into newConfig.variables?
-            (newConfig.variables as any)[k] = v;
-          });
-        }
-      }
-      setWorkflowConfig(newConfig);
-    },
-    [nodes, workflowConfig, setNodes, setWorkflowConfig]
-  );
-
-  const onConnect: OnConnect = useCallback(
-    (params) => {
-      const newEdges = addEdge({ ...params, type: 'workflow' }, edges);
-      setEdges(newEdges);
-    },
-    [edges, setEdges]
-  );
-
-  // 6) Utility: getYpos
   const getYpos = useCallback((prevNodes: Node[]) => {
     return prevNodes.length > 0
       ? Math.max(...prevNodes.map((n) => n.position.y)) + 100
       : 100;
   }, []);
 
-  // 7) addSequentialNode
   const addSequentialNode = useCallback(() => {
     const id = uuidv4();
     const newNode: RegularWorkflowNodeType = {
@@ -158,11 +104,10 @@ export default function Workflows() {
         zodSchema: '',
         inputMapping: {},
         stepOutput: '',
-        onChange: onNodeChange,
       },
     };
     setNodes([...nodes, newNode]);
-  }, [getYpos, nodes, onNodeChange, setNodes]);
+  }, [getYpos, nodes, setNodes]);
 
   // 8) addForEachNode
   const addForEachNode = useCallback(() => {
@@ -191,12 +136,11 @@ export default function Workflows() {
           zodSchema: '',
           stepOutput: '',
         },
-        availableInputs: [],
-        onChange: onNodeChange,
+        availableInputs: []
       },
     };
     setNodes([...nodes, newNode]);
-  }, [getYpos, nodes, onNodeChange, setNodes]);
+  }, [getYpos, nodes, setNodes]);
 
   // 9) onSave
   const onSave = useCallback(() => {
@@ -220,10 +164,8 @@ export default function Workflows() {
 
     console.log('Workflow to save:', workflowToSave);
     console.log('Workflow JSON:', JSON.stringify(workflowToSave, null, 2));
-    // send it somewhere
   }, [reactFlowInstance, workflow, workflowConfig, nodes, edges]);
 
-  // 10) Return the React Flow
   return (
     <div style={{ width: 'calc("100vw - 250px")', height: '100vh' }}>
       <Toolbar
@@ -234,8 +176,8 @@ export default function Workflows() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={handleNodesChange as any}
-        onEdgesChange={handleEdgesChange}
+        onNodesChange={onNodesChange as any}
+        onEdgesChange={onEdgesChange}
         edgeTypes={edgeTypes}
         onConnect={onConnect}
         nodeTypes={nodeTypes}

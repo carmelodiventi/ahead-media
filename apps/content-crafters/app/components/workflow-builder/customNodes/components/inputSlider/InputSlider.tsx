@@ -8,13 +8,12 @@ interface InputSliderProps extends SliderProps {
 
 const InputSlider: React.FC<InputSliderProps> = ({
   label,
-  value,
   ...props
 }) => {
   return (
     <>
       <Text size={'2'}>
-        {label}: {value?.at(0)}
+        {label}: {props.defaultValue?.at(0)}
       </Text>
       <Slider className={'nodrag'} {...props} />
     </>
