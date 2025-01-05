@@ -3,7 +3,7 @@ import { Outlet } from "@remix-run/react";
 import { LoaderFunctionArgs, redirect } from "@remix-run/node";
 import {createSupabaseServerClient} from "../utils/supabase.server";
 import DocumentFinder from "../components/documents/document-finder";
-import Navigation from "../components/shared/layout/navigation";
+import Navigation from "../components/shared/layout/navigation/editor";
 import CurrentUser from "../components/account/info/CurrentUser";
 
 

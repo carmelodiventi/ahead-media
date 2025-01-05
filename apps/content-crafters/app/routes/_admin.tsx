@@ -1,11 +1,9 @@
-import { Box, Flex, Text } from "@radix-ui/themes";
-import { Outlet } from "@remix-run/react";
-import { LoaderFunctionArgs, redirect } from "@remix-run/node";
-import {createSupabaseServerClient} from "../utils/supabase.server";
-import DocumentFinder from "../components/documents/document-finder";
-import Navigation from "../components/shared/layout/navigation";
-import CurrentUser from "../components/account/info/CurrentUser";
-
+import { Box, Flex, Text } from '@radix-ui/themes';
+import { Outlet } from '@remix-run/react';
+import { LoaderFunctionArgs, redirect } from '@remix-run/node';
+import { createSupabaseServerClient } from '../utils/supabase.server';
+import Navigation from '../components/shared/layout/navigation/admin';
+import CurrentUser from '../components/account/info/CurrentUser';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { supabaseClient } = createSupabaseServerClient(request);
@@ -14,7 +12,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   } = await supabaseClient.auth.getUser();
 
   if (!user) {
-    return redirect("/");
+    return redirect('/');
   }
 
   const env = {
@@ -27,7 +25,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 const AuthAdminLayout = () => {
   return (
-    <Flex height={"100%"} flexGrow={"1"} align="stretch" justify="center">
+    <Flex height={'100%'} flexGrow={'1'} align="stretch" justify="center">
       {/* Two column template */}
       <Flex
         direction="column"
@@ -37,19 +35,20 @@ const AuthAdminLayout = () => {
         position="fixed"
         left="0"
         top="0"
-        style={{ borderRight: "1px solid var(--mauve-a5)" }}
+        style={{ borderRight: '1px solid var(--mauve-a5)' }}
       >
         <Flex
           height="100%"
           direction="column"
           justify="between"
           gap="4"
-          py={"5"}
-          px={"4"}
+          py={'5'}
+          px={'4'}
         >
           <Flex direction="column" gap="4">
-            <Text mb="4" weight="bold" size="5">Content Crafter</Text>
-            <DocumentFinder />
+            <Text mb="4" weight="bold" size="5">
+              Content Crafter
+            </Text>
             <Navigation />
           </Flex>
           <Box>
@@ -62,7 +61,7 @@ const AuthAdminLayout = () => {
         height="100%"
         minHeight="100%"
         ml={{
-          md: "250px",
+          md: '250px',
         }}
       >
         <Outlet />

@@ -15,6 +15,12 @@ const CustomHandle: React.FC<
   return (
     <Handle
       {...rest}
+      style={{
+        height: '14px',
+        width: '14px',
+        background: 'var(--accent-9)',
+        border: '3px solid var(--accent-5)',
+      }}
       isConnectable={connectionCount ? connections.length < connectionCount : true}
     />
   );

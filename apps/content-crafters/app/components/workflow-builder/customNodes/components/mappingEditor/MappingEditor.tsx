@@ -1,11 +1,5 @@
 import React, { Fragment } from 'react';
-import {
-  Text,
-  Flex,
-  Box,
-  IconButton,
-  DataList,
-} from '@radix-ui/themes';
+import { Text, Flex, Box, IconButton, DataList } from '@radix-ui/themes';
 import { Cross2Icon } from '@radix-ui/react-icons';
 
 interface MappingEditorProps {
@@ -19,14 +13,13 @@ const MappingEditor: React.FC<MappingEditorProps> = ({
   mapping,
   setMapping,
 }) => {
-
   const removeMapping = (variable: string) => {
     const updatedMapping = { ...mapping };
     delete updatedMapping[variable];
     setMapping(updatedMapping);
   };
 
-  if(Object.entries(mapping).length === 0) {
+  if (Object.entries(mapping).length === 0) {
     return null;
   }
 
@@ -45,11 +38,22 @@ const MappingEditor: React.FC<MappingEditorProps> = ({
             <DataList.Item>
               <DataList.Label minWidth="88px">Source</DataList.Label>
               <DataList.Value>
-                <Flex align="center" justify={"between"} style={{
-                  width: '100%',
-                }}>
-                  {source}
-                  <IconButton onClick={() => removeMapping(variable)}>
+                <Flex
+                  align="center"
+                  justify={'between'}
+                  gap="4"
+                  style={{
+                    width: '100%',
+                  }}
+                >
+                  <Text truncate={true} wrap={"pretty"}>{source}</Text>
+                  <IconButton
+                    radius={'full'}
+                    size={'1'}
+                    color={'gray'}
+                    variant={'ghost'}
+                    onClick={() => removeMapping(variable)}
+                  >
                     <Cross2Icon />
                   </IconButton>
                 </Flex>

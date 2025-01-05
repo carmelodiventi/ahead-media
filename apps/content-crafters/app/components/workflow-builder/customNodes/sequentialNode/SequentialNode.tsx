@@ -6,7 +6,6 @@ import {
   Box,
   Grid,
   Text,
-  TextArea,
 } from '@radix-ui/themes';
 import InputPrompt from '../components/inputPrompt/InputPrompt';
 import InputSlider from '../components/inputSlider';
@@ -17,6 +16,7 @@ import PromptVariables from '../components/promptVariables/PromptVariables';
 import StepName from '../components/stepName/StepName';
 import InputSwitch from '../components/inputSwitch/inputSwitch';
 import Output from '../components/output/Output';
+import SchemaBuilder from "../components/schemaBuilder";
 
 const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
   props
@@ -34,9 +34,9 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
       }}
     >
       <Grid gap="4" align="start">
-        {/* Name */}
+
         <StepName data={data} />
-        {/* System Prompt */}
+
         <InputPrompt
           label="System Prompt"
           prompt={data.systemPrompt}
@@ -45,7 +45,6 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
           }
         />
 
-        {/* User Prompt */}
         <InputPrompt
           label="User Prompt"
           prompt={data.userPrompt}
@@ -67,7 +66,6 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
 
         <PromptVariables data={data} />
 
-        {/* Input Mapping */}
         <MappingEditor
           label="Input Mapping"
           mapping={data.inputMapping}
@@ -76,7 +74,6 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
           }
         />
 
-        {/* LLM Parameter Sliders */}
         <InputSlider
           label="Temperature"
           defaultValue={[data?.llmParams?.temperature ?? 0.2]}
@@ -89,6 +86,40 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
               llmParams: {
                 ...data.llmParams,
                 temperature: val,
+              },
+            })
+          }
+        />
+
+        <InputSlider
+          label="Frequency Penalty"
+          defaultValue={[data?.llmParams?.frequencyPenalty ?? 0.2]}
+          step={0.1}
+          min={0}
+          max={1}
+          onValueChange={([val]) =>
+            onNodeChange(id, {
+              ...data,
+              llmParams: {
+                ...data.llmParams,
+                frequencyPenalty: val,
+              },
+            })
+          }
+        />
+
+        <InputSlider
+          label="Presence Penalty"
+          defaultValue={[data?.llmParams?.presencePenalty ?? 0.2]}
+          step={0.1}
+          min={0}
+          max={1}
+          onValueChange={([val]) =>
+            onNodeChange(id, {
+              ...data,
+              llmParams: {
+                ...data.llmParams,
+                presencePenalty: val,
               },
             })
           }
@@ -110,13 +141,12 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
 
         {data.expectJson && (
           <Box px={'4'}>
-            <Text size="2">Zod Schema:</Text>
-            <TextArea
-              className="nodrag"
-              placeholder="Zod Schema"
-              value={data.zodSchema as string}
-              onChange={(e) =>
-                onNodeChange(id, { ...data, zodSchema: e.target.value })
+            <Text size="2">Schema:</Text>
+            <SchemaBuilder
+              showValidation={true}
+              value={data.zodSchema || []}
+              onChange={(schema) =>
+                onNodeChange(id, { ...data, zodSchema: schema })
               }
             />
           </Box>

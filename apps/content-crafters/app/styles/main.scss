@@ -1,5 +1,5 @@
 @use './rich-text-editor';
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import '@radix-ui/themes/styles.css';
 @import '@radix-ui/themes/tokens/colors/gray.css';
 
@@ -8,10 +8,9 @@ body {
 }
 
 .radix-themes {
-  --default-font-family: 'JetBrains Mono', monospace, Helvetica, Arial, sans-serif;
-  --heading-font-family: "Inter", sans-serif;
+  --default-font-family: 'Inter', system-ui, sans-serif;
+  --heading-font-family: 'Inter', system-ui, sans-serif;
 }
-
 
 .content {
   position: absolute;
@@ -20,7 +19,6 @@ body {
   transform: translate(-50%, -50%);
   height: 160px;
   overflow: hidden;
-  font-family: 'JetBrains Mono', monospace, sans-serif;
   font-size: 35px;
   line-height: 40px;
   color: #ecf0f1;

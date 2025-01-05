@@ -50,14 +50,14 @@ const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
   },
   onEdgesChange: (changes: EdgeChange[]) => {
-    console.log('onEdgesChange', changes);
     set({
       edges: applyEdgeChanges(changes, get().edges),
     });
   },
   onConnect: (connection: Connection) => {
+    const edge = { ...connection, type: 'customEdge' };
     set({
-      edges: addEdge(connection, get().edges),
+      edges: addEdge(edge, get().edges),
     });
   },
   onNodeChange: (nodeId, updatedData) => {

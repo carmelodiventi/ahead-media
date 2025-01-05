@@ -1,16 +1,21 @@
 import './index.css';
 import React from 'react';
 import { Toolbar, ToggleGroup, ToggleItem } from '@radix-ui/react-toolbar';
-import { Separator } from '@radix-ui/themes';
+import { Heading, Separator } from '@radix-ui/themes';
 import { ToolbarOptionsProps } from './Toolbar.types';
 
 const ToolbarOptions: React.FC<ToolbarOptionsProps> = ({
+  workflow,
   addSequentialNode,
   addForEachNode,
   onSave,
 }) => {
   return (
     <Toolbar className="ToolbarRoot">
+      <Heading as={'h3'} size={'3'}>
+        {workflow.name}
+      </Heading>
+      <Separator className="ToolbarSeparator" orientation={'vertical'} />
       <ToggleGroup type="multiple">
         <ToggleItem
           className="ToolbarToggleItem"

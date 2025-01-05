@@ -3,16 +3,28 @@ import { Edge, Node, Viewport } from '@xyflow/react';
 import { OpenAIBaseInput } from '@langchain/openai';
 import { ExtractedVars } from '../components/workflow-builder/utils/extractVariables';
 
+
+/**
+ * Overall workflow config
+ */
+export interface WorkflowConfig {
+  inputs?: Record<string, WorkflowInput>;
+  variables?: ExtractedVars;
+}
+
 /**
  * Workflow Template
  */
 export interface WorkflowTemplate {
-  id?: string;
+  id: string;
   name: string;
+  description: string;
   config: WorkflowConfig;
   nodes: Node[];
   edges: Edge[];
-  viewport?: Viewport;
+  viewport: Viewport;
+  created_at: string;
+  updated_at: string;
 }
 
 /**
@@ -23,6 +35,12 @@ export enum StepType {
   ForEach = 'forEach',
 }
 
+export type SchemaField = {
+  key: string;
+  type: string;
+  children?: SchemaField[]; // For nested objects
+};
+
 /**
  * A standard sequential step in the workflow
  */
@@ -32,7 +50,7 @@ export interface RegularWorkflowStep {
   type: StepType;
   llmParams: Partial<OpenAIBaseInput>;
   expectJson: boolean;
-  zodSchema?: string | z.ZodTypeAny;
+  zodSchema?: SchemaField[];
   stream: boolean;
   systemPrompt: string;
   userPrompt: string;
@@ -70,14 +88,6 @@ export interface WorkflowInput {
   description?: string;
   defaultValue?: any;
   required: boolean;
-}
-
-/**
- * Overall workflow config
- */
-export interface WorkflowConfig {
-  inputs?: Record<string, WorkflowInput>;
-  variables?: ExtractedVars;
 }
 
 /**

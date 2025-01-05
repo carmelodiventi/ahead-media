@@ -22,9 +22,9 @@ import {
 import Toolbar from '../components/workflow-builder/toolbar';
 import SequentialNode from '../components/workflow-builder/customNodes/sequentialNode';
 import ForEachNode from '../components/workflow-builder/customNodes/forEachNode';
-import CustomEdge from '../components/workflow-builder/customEdges/customeEdge';
 import { useShallow } from 'zustand/react/shallow';
 import useWorkflowStore, { WorkflowState } from '../store/workflowStore';
+import ButtonEdge from '../components/workflow-builder/customEdges/buttonEdge';
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   try {
@@ -53,15 +53,21 @@ export const action: ActionFunction = async ({ request }) => {
   if (!formData.has('workflow')) {
     return new Response('No workflow data found', { status: 400 });
   }
-  const workflow = JSON.parse(formData.get('workflow') as string);
+  const workflow: WorkflowTemplate = JSON.parse(formData.get('workflow') as string);
 
   const { supabaseClient } = createSupabaseServerClient(request);
   const { data, error } = await supabaseClient
     .from('workflow_templates')
-    .upsert(workflow).eq('id', 1);
+    .upsert({
+      ...workflow,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', 1);
 
   if (error) {
-    return new Response(`Failed to save workflow: ${error.message}`, { status: 500 });
+    return new Response(`Failed to save workflow: ${error.message}`, {
+      status: 500,
+    });
   }
 
   console.log('Workflow saved:', data);
@@ -74,7 +80,7 @@ const nodeTypes: NodeTypes = {
   forEach: ForEachNode,
 };
 
-const edgeTypes = { workflow: CustomEdge };
+const edgeTypes = { customEdge: ButtonEdge };
 
 const selector = (state: WorkflowState) => ({
   nodes: state.nodes,
@@ -138,7 +144,7 @@ export default function Workflows() {
         userPrompt: '',
         stream: false,
         expectJson: false,
-        zodSchema: '',
+        zodSchema: [],
         inputMapping: {},
         availableInputs: [],
         stepOutput: '',
@@ -179,7 +185,7 @@ export default function Workflows() {
           stream: false,
           expectJson: false,
           inputMapping: {},
-          zodSchema: '',
+          zodSchema: [],
           stepOutput: '',
           availableInputs: [],
           llmParams: {
@@ -216,7 +222,6 @@ export default function Workflows() {
     };
 
     console.log('Workflow to save:', workflowToSave);
-    console.log('Workflow JSON:', JSON.stringify(workflowToSave, null, 2));
 
     const formData = new FormData();
     formData.append('workflow', JSON.stringify(workflowToSave));
@@ -225,11 +230,16 @@ export default function Workflows() {
       method: 'POST',
       action: `/admin/workflows/${workflow?.id}`,
     });
-  }, [ workflow, workflowConfig, nodes, edges]);
+  }, [workflow, workflowConfig, nodes, edges]);
 
   return (
     <div style={{ width: 'calc("100vw - 250px")', height: '100vh' }}>
       <Toolbar
+        workflow={{
+          id: workflow.id,
+          name: workflow.name,
+          config: workflowConfig,
+        }}
         onSave={onSave}
         addSequentialNode={addSequentialNode}
         addForEachNode={addForEachNode}

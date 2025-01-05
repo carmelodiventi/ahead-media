@@ -6,26 +6,13 @@ interface StyledNodeProps {
 }
 
 export const Node = styled.div<StyledNodeProps>`
+  font-family: 'Segoe UI', sans-serif;
   border-radius: 5px;
   background: ${({ theme }) =>
-    theme === 'dark' ? 'var(--gray-1)' : 'var(--gray-12)'}; // Use resolvedTheme
+    theme === 'dark' ? 'var(--white-a11)' : 'var(--gray-12)'}; // Use resolvedTheme
   color: ${({ theme }) =>
     theme === 'dark' ? 'var(--gray-12)' : 'var(--gray-1)'};
-  border: 1px solid
+  border: 3px solid
     ${({ selected, theme }) =>
-      selected ? 'var(--gray-9)' : theme === 'dark' ? 'var(--gray-12)' : 'var(--gray-12)'};
-
-  .react-flow__handle {
-    background: var(--gray-12);
-    width: 8px;
-    height: 8px;
-    border-radius: 100%;
-  }
-  .label {
-    font-family: 'Segoe UI', sans-serif;
-    > p {
-      margin: 0 0 1rem 0;
-      font-size: 12px;
-    }
-  }
+      selected ? 'var(--gray-9)' : theme === 'dark' ? 'var(--gray-5)' : 'var(--gray-8)'};
 `;

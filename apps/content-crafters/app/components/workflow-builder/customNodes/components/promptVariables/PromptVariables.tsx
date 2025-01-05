@@ -31,14 +31,13 @@ const PromptVariables: React.FC<{
     if (!targetNode || !sourceNode) return;
 
     // @ts-ignore
-    const { inputMapping }: { inputMapping: Record<string, string> } =
-      sourceNode.data as WorkflowNode['data'];
+    const { inputMapping }: { inputMapping: Record<string, string> } = targetNode;
 
     onNodeChange(params.target, {
-      ...(sourceNode.data as WorkflowNode['data']),
+      ...targetNode,
       inputMapping: {
         ...inputMapping,
-        [params.targetHandle as string]: `${data.id}`,
+        [params.targetHandle as string]: `${sourceNode.id}`,
       },
     });
   };
@@ -66,9 +65,6 @@ const PromptVariables: React.FC<{
                   px={'4'}
                 >
                   <Strong>{variable}</Strong>
-
-
-
                   <DropdownMenu.Root modal={true}>
                     <DropdownMenu.Trigger>
                       <TextField.Root
@@ -107,9 +103,9 @@ const PromptVariables: React.FC<{
 
                   {!data.inputMapping[variable]?.includes('initialInput') ? (
                     <CustomHandle
+                      id={variable}
                       position={Position.Left}
                       type="target"
-                      id={variable}
                       onConnect={onConnect}
                       connectionCount={1}
                     />

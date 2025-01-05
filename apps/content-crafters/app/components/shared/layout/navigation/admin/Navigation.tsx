@@ -2,25 +2,14 @@ import { Box, Flex, Link as NavLink } from '@radix-ui/themes'
 import { useNavigate } from 'react-router'
 import { useMemo } from 'react'
 
-const Navigation = () => {
+const
+  Navigation = () => {
     const navigate = useNavigate()
     const navigationItems = useMemo(
         () => [
             {
-                label: 'Dashboard',
-                to: '/app/dashboard',
-            },
-            {
-                label: 'Documents',
-                to: '/app/documents',
-            },
-            {
-                label: 'Settings',
-                to: '/app/settings',
-            },
-            {
-                label: 'Knowledge base',
-                to: '/app/ai/knowledge-base',
+                label: 'Workflows',
+                to: '/admin/workflows',
             },
         ],
         []

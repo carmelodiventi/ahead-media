@@ -21,23 +21,25 @@ const Header = ({ quickActions, title, edited }: HeaderProps) => {
 
       <Flex gap="4" align="center" px={'4'}>
         {formattedDate && <Text size={'1'}>Edited {formattedDate}</Text>}
-        {quickActions?.map((action, idx) =>
-          action.component ? (
-            React.cloneElement(action.component, { key: idx })
+        {quickActions?.map((button, idx) =>
+          button.component ? (
+            React.cloneElement(button.component, { key: idx })
           ) : (
             <Button
               key={idx}
+              {...button.color && { color: button.color }}
+              {...button.size && { variant: button.size }}
+              highContrast={true}
+              variant={button.variant ?? 'ghost'}
               onClick={
-                action.action
-                  ? action.action
+                button.action
+                  ? button.action
                   : () => {
-                      if (action.href) navigate(action.href);
+                      if (button.href) navigate(button.href);
                     }
               }
-              variant={action.variant ?? 'ghost'}
-              size={'1'}
             >
-              {action?.label ?? action.icon}
+              {button?.label ?? button.icon}
             </Button>
           )
         )}
