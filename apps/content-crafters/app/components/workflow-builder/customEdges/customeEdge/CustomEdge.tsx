@@ -9,7 +9,7 @@ export const CustomEdge = ({
   targetX,
   targetY,
   style,
-  markerEnd,
+  markerEnd
 }: EdgeProps) => {
   const edgePath = `M ${sourceX},${sourceY} L ${targetX},${targetY}`; // Simple path drawing logic
 
@@ -31,7 +31,7 @@ export const CustomEdge = ({
           transform: 'rotate(-25deg)',
         }}
       >
-        Workflow edge
+        Label
       </Text>
     </>
   );

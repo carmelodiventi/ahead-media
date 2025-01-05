@@ -6,7 +6,6 @@ interface StyledNodeProps {
 }
 
 export const Node = styled.div<StyledNodeProps>`
-  padding: 10px 20px;
   border-radius: 5px;
   background: ${({ theme }) =>
     theme === 'dark' ? 'var(--gray-1)' : 'var(--gray-12)'}; // Use resolvedTheme

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Edge, Node, Viewport } from '@xyflow/react';
 import { OpenAIBaseInput } from '@langchain/openai';
-import {ExtractedVars} from "../components/workflow-builder/utils/extractVariables";
+import { ExtractedVars } from '../components/workflow-builder/utils/extractVariables';
 
 /**
  * Workflow Template
@@ -30,24 +30,17 @@ export interface RegularWorkflowStep {
   id?: string;
   name: string;
   type: StepType;
-  llmParams?: Partial<OpenAIBaseInput>;
-  // JSON validation
-  expectJson?: boolean;
+  llmParams: Partial<OpenAIBaseInput>;
+  expectJson: boolean;
   zodSchema?: string | z.ZodTypeAny;
-  // Stream the result
   stream: boolean;
-  // Prompt-related fields
   systemPrompt: string;
   userPrompt: string;
-  inputMapping?: Record<string, unknown>;
-  outputMapping?: Record<string, unknown>;
-  // variable inputs
-  variables?: {
-    required?: string[];
-    optional?: string[];
-  };
-  // variable outputs
-  stepOutput: string | Record<string, any>;
+  availableInputs: string[];
+  inputMapping: Record<string, string>;
+  output: 'rawText' | 'json';
+  variables: ExtractedVars;
+  stepOutput: string;
 }
 
 /**
@@ -83,33 +76,15 @@ export interface WorkflowInput {
  * Overall workflow config
  */
 export interface WorkflowConfig {
-  id: string;
-  name: string;
   inputs?: Record<string, WorkflowInput>;
   variables?: ExtractedVars;
-  steps: WorkflowStep[];
 }
-
-/**
- * A generic node change handler type
- */
-export type NodeChangeHandler<T> = (id: string, updatedData: T) => void;
-
-/**
- * Node types
- *
- * We remove the WorkflowConfigNodeType so there's no single 'workflow' node anymore.
- */
 
 /**
  * Regular workflow node type: for 'sequential' steps
  */
 export type RegularWorkflowNodeType = Node<
-  RegularWorkflowStep &
-    Record<string, unknown> & {
-      inputMapping: Record<string, string>;
-      outputMapping?: Record<string, string>;
-    },
+  RegularWorkflowStep & Record<string, unknown>,
   'sequential'
 >;
 
@@ -119,8 +94,7 @@ export type RegularWorkflowNodeType = Node<
 export type ForEachWorkflowNodeType = Node<
   ForEachWorkflowStep &
     Record<string, unknown> & {
-      inputMapping?: Record<string, string>;
-      outputMapping?: Record<string, string>;
+      sub_step: RegularWorkflowStep;
     },
   'forEach'
 >;

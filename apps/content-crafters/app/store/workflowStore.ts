@@ -15,6 +15,7 @@ import {
   EdgeChange,
   NodeChange,
 } from '@xyflow/react';
+import {extractJsonKeys} from "../components/workflow-builder/utils/extractJsonKeys";
 
 export interface WorkflowState {
   nodes: WorkflowNode[];
@@ -37,14 +38,11 @@ const useWorkflowStore = create<WorkflowState>((set, get) => ({
   nodes: [],
   edges: [],
   workflowConfig: {
-    id: '',
-    name: '',
     inputs: {},
     variables: {
       required: [],
       optional: [],
     },
-    steps: [],
   },
   onNodesChange: (changes: NodeChange<WorkflowNode>[]) => {
     set({
@@ -52,6 +50,7 @@ const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
   },
   onEdgesChange: (changes: EdgeChange[]) => {
+    console.log('onEdgesChange', changes);
     set({
       edges: applyEdgeChanges(changes, get().edges),
     });
@@ -78,7 +77,26 @@ const useWorkflowStore = create<WorkflowState>((set, get) => ({
               },
             };
           } else {
-            return { ...node, data: { ...node.data, ...updatedData } };
+            const updatedNodeData = updatedData as RegularWorkflowStep;
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                ...updatedNodeData,
+                ...(updatedNodeData.stepOutput && {
+                  outputMetadata: {
+                    type:
+                      typeof updatedNodeData.stepOutput === 'object'
+                        ? 'json'
+                        : 'text',
+                    keys:
+                      typeof updatedNodeData.stepOutput === 'object'
+                        ? extractJsonKeys(updatedNodeData.stepOutput)
+                        : ['rawText'],
+                  },
+                }),
+              },
+            };
           }
         }
         return node;

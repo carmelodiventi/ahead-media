@@ -12,7 +12,11 @@ declare module '@remix-run/node' {
 export default defineConfig({
   root: __dirname,
   ssr: {
-    noExternal: ["styled-components", "remix-utils", "react-dropzone"],
+    noExternal: [
+      'styled-components',
+      'remix-utils',
+      'react-dropzone'
+    ],
   },
   plugins: [
     remix({

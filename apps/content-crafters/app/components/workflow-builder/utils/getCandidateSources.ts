@@ -1,30 +1,31 @@
-import {Edge} from "@xyflow/react";
-import {WorkflowConfig, WorkflowNode} from "../../../types/Workflow.types";
+import { WorkflowNode } from '../../../types/Workflow.types';
+import { Edge } from '@xyflow/react';
 
-export function getCandidateSources(
+export const getCandidateSources = (
   nodes: WorkflowNode[],
-  edges: Edge[],
-  config: WorkflowConfig,
+  edges: Edge[], // Workflow edges
   currentNodeId: string
-): string[] {
-  const sources = new Set<string>();
+): { nodeId: string; key: string; type: string }[] => {
+  const candidateSources: { nodeId: string; key: string; type: string }[] = [];
 
+  if (!Array.isArray(edges)) {
+    console.error('Edges is not an array:', edges);
+    return [];
+  }
 
-  config.variables?.required?.forEach((v) => sources.add(`initialInputs.${v}`));
-  config.variables?.optional?.forEach((v) => sources.add(`initialInputs.${v}`));
+  // Identify incoming edges
+  const incomingEdges = edges.filter((edge) => edge.target === currentNodeId);
 
-  const incomingEdges = edges.filter((e) => e.target === currentNodeId);
+  // Find source nodes and extract metadata
   incomingEdges.forEach((edge) => {
-    const sourceNode = nodes.find((n) => n.id === edge.source);
-    if (sourceNode?.data) {
-      const nodeName = sourceNode.data.name || sourceNode.id;
-      if (sourceNode.data.outputMapping) {
-        Object.keys(sourceNode.data.outputMapping).forEach((key) => {
-          sources.add(`${nodeName}.${key}`);
-        });
-      }
+    const sourceNode = nodes.find((node) => node.id === edge.source);
+    if (sourceNode && sourceNode.data.outputMetadata) {
+      const { keys, type } = sourceNode.data.outputMetadata;
+      keys.forEach((key) => {
+        candidateSources.push({ nodeId: edge.source, key, type });
+      });
     }
   });
 
-  return Array.from(sources);
-}
+  return candidateSources;
+};

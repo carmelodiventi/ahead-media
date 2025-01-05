@@ -1,58 +1,41 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { NodeProps } from '@xyflow/react';
-import {
-  RegularWorkflowNodeType,
-  WorkflowNode,
-} from '../../../../types/Workflow.types';
+import { RegularWorkflowNodeType } from '../../../../types/Workflow.types';
 import CustomNode from '../customNode/CustomNode';
 import {
-  Flex,
+  Box,
   Grid,
-  Switch,
   Text,
   TextArea,
-  TextField,
 } from '@radix-ui/themes';
 import InputPrompt from '../components/inputPrompt/InputPrompt';
 import InputSlider from '../components/inputSlider';
 import MappingEditor from '../components/mappingEditor';
 import useWorkflowState from '../../../../hooks/useWorkflowState';
 import { extractVariables } from '../../utils/extractVariables';
-import { getCandidateSources } from '../../utils/getCandidateSources';
+import PromptVariables from '../components/promptVariables/PromptVariables';
+import StepName from '../components/stepName/StepName';
+import InputSwitch from '../components/inputSwitch/inputSwitch';
+import Output from '../components/output/Output';
 
 const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
   props
 ) => {
   const { data, id } = props;
-  const { nodes, edges, config, onNodeChange, onConfigChange } =
+  const { config, onNodeChange, onConfigChange } =
     useWorkflowState();
 
-  const candidateSources = useMemo(() => {
-    return getCandidateSources(nodes as WorkflowNode[], edges, config, id);
-  }, [nodes, edges, config, id]);
 
   return (
     <CustomNode
       data={{
         label: 'Sequential Step',
-        description: 'Step in the workflow and is executed sequentially',
-        handles: {
-          source: { show: true, connectionCount: 1 },
-          target: { show: true, connectionCount: 1 },
-        },
+        description: 'Executes a step sequentially in the workflow',
       }}
     >
       <Grid gap="4" align="start">
         {/* Name */}
-        <Text size="2">Name:</Text>
-        <TextField.Root
-          type="text"
-          placeholder="Name"
-          className="nodrag"
-          defaultValue={data.name}
-          onChange={(e) => onNodeChange(id, { ...data, name: e.target.value })}
-        />
-
+        <StepName data={data} />
         {/* System Prompt */}
         <InputPrompt
           label="System Prompt"
@@ -82,16 +65,16 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
           }}
         />
 
-        {/* Display Variables */}
-        <Text size="2">Variables in Prompt:</Text>
-        <Flex direction="column" gap="1" style={{ marginBottom: '8px' }}>
-          <Text size="2" color="gray">
-            Required: {data.variables?.required?.join(', ') || 'None'}
-          </Text>
-          <Text size="2" color="gray">
-            Optional: {data.variables?.optional?.join(', ') || 'None'}
-          </Text>
-        </Flex>
+        <PromptVariables data={data} />
+
+        {/* Input Mapping */}
+        <MappingEditor
+          label="Input Mapping"
+          mapping={data.inputMapping}
+          setMapping={(mapping) =>
+            onNodeChange(id, { ...data, inputMapping: mapping })
+          }
+        />
 
         {/* LLM Parameter Sliders */}
         <InputSlider
@@ -100,73 +83,33 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
           step={0.1}
           min={0}
           max={1}
-          onValueChange={([val]) => {
+          onValueChange={([val]) =>
             onNodeChange(id, {
               ...data,
               llmParams: {
                 ...data.llmParams,
                 temperature: val,
               },
-            });
-          }}
-        />
-        <InputSlider
-          label="Frequency Penalty"
-          defaultValue={[data?.llmParams?.frequencyPenalty ?? 0]}
-          step={1}
-          min={0}
-          max={2}
-          onValueChange={([val]) =>
-            onNodeChange(id, {
-              ...data,
-              llmParams: {
-                ...data.llmParams,
-                frequencyPenalty: val,
-              },
-            })
-          }
-        />
-        <InputSlider
-          label="Frequency Penalty"
-          defaultValue={[data?.llmParams?.presencePenalty ?? 0]}
-          step={1}
-          min={0}
-          max={2}
-          onValueChange={([val]) =>
-            onNodeChange(id, {
-              ...data,
-              llmParams: {
-                ...data.llmParams,
-                presencePenalty: val,
-              },
             })
           }
         />
 
-        {/* Stream Toggle */}
-        <Text size="2">Stream:</Text>
-        <Flex align="center">
-          <Switch
-            className="nodrag"
-            checked={data.stream}
-            onCheckedChange={(checked) =>
-              onNodeChange(id, { ...data, stream: checked })
-            }
-          />
-        </Flex>
+        <InputSwitch
+          label="Stream"
+          data={data}
+          checked={data.stream}
+          targetKey="stream"
+        />
 
-        <Text size="2">Expect JSON:</Text>
-        <Flex align="center">
-          <Switch
-            className="nodrag"
-            checked={data.expectJson}
-            onCheckedChange={(checked) =>
-              onNodeChange(id, { ...data, expectJson: checked })
-            }
-          />
-        </Flex>
+        <InputSwitch
+          label="Expect JSON"
+          data={data}
+          checked={Boolean(data.expectJson)}
+          targetKey="expectJson"
+        />
+
         {data.expectJson && (
-          <>
+          <Box px={'4'}>
             <Text size="2">Zod Schema:</Text>
             <TextArea
               className="nodrag"
@@ -176,48 +119,11 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
                 onNodeChange(id, { ...data, zodSchema: e.target.value })
               }
             />
-          </>
+          </Box>
         )}
 
-        <MappingEditor
-          label="Input Mapping"
-          mapping={data.inputMapping}
-          setMapping={(mapping) =>
-            onNodeChange(id, { ...data, inputMapping: mapping })
-          }
-          variablePlaceholder="Enter prompt var to fill"
-          sourcePlaceholder="Source (e.g. initialInputs.about)"
-          readOnlyKeys={false}
-        />
+        <Output data={data} />
 
-        {/* Output Mapping (reuse MappingEditor) */}
-        <MappingEditor
-          label="Output Mapping"
-          mapping={data?.outputMapping ?? {}}
-          setMapping={(mapping) =>
-            onNodeChange(id, { ...data, outputMapping: mapping })
-          }
-          variablePlaceholder="Alias for this output"
-          sourcePlaceholder="(Optional) JSON path or leave blank"
-          readOnlyKeys={false}
-          candidateSources={candidateSources}
-        />
-
-        {/* Step Output (Raw LLM Result) */}
-        <Text size="2">Step Output (example):</Text>
-        <TextArea
-          className="nodrag"
-          placeholder="LLM response or JSON"
-          rows={3}
-          value={
-            typeof data.stepOutput === 'string'
-              ? data.stepOutput
-              : JSON.stringify(data.stepOutput, null, 2)
-          }
-          onChange={(e) =>
-            onNodeChange(id, { ...data, stepOutput: e.target.value })
-          }
-        />
       </Grid>
     </CustomNode>
   );

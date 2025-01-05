@@ -10,10 +10,12 @@ const CustomHandle: React.FC<
     type: props.type,
   });
 
+  const { connectionCount, ...rest } = props;
+
   return (
     <Handle
-      {...props}
-      isConnectable={props.connectionCount ? connections.length < props.connectionCount : true}
+      {...rest}
+      isConnectable={connectionCount ? connections.length < connectionCount : true}
     />
   );
 };

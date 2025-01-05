@@ -1,13 +1,13 @@
-
-interface QuickAction{
-    label?: string,
-    href?: string,
-    icon?: React.ReactNode
-    variant?: "classic" | "solid" | "soft" | "surface"| "outline"| "ghost"
-    component?: JSX.Element
+interface QuickAction {
+  label?: string;
+  href?: string;
+  action?: () => void;
+  icon?: React.ReactNode;
+  variant?: 'classic' | 'solid' | 'soft' | 'surface' | 'outline' | 'ghost';
+  component?: JSX.Element;
 }
-export interface HeaderProps{
-    title: string,
-    quickActions?: Array<QuickAction>
-    edited?: number
+export interface HeaderProps {
+  title: string;
+  quickActions?: Array<QuickAction>;
+  edited?: number;
 }

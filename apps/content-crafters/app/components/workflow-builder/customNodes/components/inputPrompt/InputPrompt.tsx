@@ -1,6 +1,6 @@
 import React from 'react';
 import PromptModal from '../promptModal';
-import { Text, TextField } from '@radix-ui/themes';
+import {Box, Text, TextField} from '@radix-ui/themes';
 import { InputIcon } from '@radix-ui/react-icons';
 
 const InputPrompt: React.FC<{
@@ -12,7 +12,7 @@ const InputPrompt: React.FC<{
   const [showPromptModal, setShowPromptModal] = React.useState(false);
 
   return (
-    <>
+    <Box px={"4"}>
       <Text size={'2'}>{label}</Text>
       <TextField.Root
         placeholder={placeholder}
@@ -33,7 +33,7 @@ const InputPrompt: React.FC<{
         showPromptModal={showPromptModal}
         setShowPromptModal={setShowPromptModal}
       />
-    </>
+    </Box>
   );
 };
 

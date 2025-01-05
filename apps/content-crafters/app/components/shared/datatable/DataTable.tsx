@@ -7,8 +7,8 @@ import {
   getSortedRowModel,
   PaginationState,
   useReactTable,
-} from "@tanstack/react-table";
-import Loader from "../loader/Loader";
+} from '@tanstack/react-table';
+import Loader from '../loader/Loader';
 
 import {
   Box,
@@ -17,14 +17,14 @@ import {
   Select,
   Table as TableUI,
   Text,
-} from "@radix-ui/themes";
+} from '@radix-ui/themes';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
-} from "@radix-ui/react-icons";
-import React from "react";
+} from '@radix-ui/react-icons';
+import React from 'react';
 
 interface Props<T> {
   data: NonNullable<T>[];
@@ -58,7 +58,12 @@ function DataTable<T>({ data, columns, loading }: Props<T>) {
   return (
     <Box width="100%" height="100%">
       <Loader showing={loading} />
-      <Flex direction="column" className="relative z-10" justify="between" height="100%">
+      <Flex
+        direction="column"
+        className="relative z-10"
+        justify="between"
+        height="100%"
+      >
         <TableUI.Root>
           <TableUI.Header>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -72,8 +77,8 @@ function DataTable<T>({ data, columns, loading }: Props<T>) {
                       <Box
                         {...{
                           className: header.column.getCanSort()
-                            ? "cursor-pointer select-none"
-                            : "",
+                            ? 'cursor-pointer select-none'
+                            : '',
                           onClick: header.column.getToggleSortingHandler(),
                         }}
                       >
@@ -82,8 +87,8 @@ function DataTable<T>({ data, columns, loading }: Props<T>) {
                           header.getContext()
                         )}
                         {{
-                          asc: " 🔼",
-                          desc: " 🔽",
+                          asc: ' 🔼',
+                          desc: ' 🔽',
                         }[header.column.getIsSorted() as string] ?? null}
                         {header.column.getCanFilter() ? (
                           <Box>
@@ -117,20 +122,26 @@ function DataTable<T>({ data, columns, loading }: Props<T>) {
           </TableUI.Body>
         </TableUI.Root>
 
-        <Flex width="full" align={"center"} justify={"between"} mt={"4"} px={"3"}>
+        <Flex
+          width="full"
+          align={'center'}
+          justify={'between'}
+          mt={'4'}
+          px={'3'}
+        >
           <Flex
             flexGrow="1"
             gap="4"
             direction={{
-              sm: "column",
-              md: "row",
+              sm: 'column',
+              md: 'row',
             }}
             align="center"
           >
-            <Text size={"2"}>
+            <Text size={'2'}>
               Page
-              <Text as={"span"} weight="bold" className="px-2">
-                {table.getState().pagination.pageIndex + 1} of{" "}
+              <Text as={'span'} weight="bold" ml={'2'}>
+                {table.getState().pagination.pageIndex + 1} of{' '}
                 {table.getPageCount().toLocaleString()}
               </Text>
             </Text>
@@ -152,38 +163,38 @@ function DataTable<T>({ data, columns, loading }: Props<T>) {
           </Flex>
 
           <Flex
-            flexGrow={"1"}
+            flexGrow={'1'}
             align="center"
             justify="end"
             width={{
-              sm: "full",
-              md: "auto",
+              sm: 'full',
+              md: 'auto',
             }}
           >
             <IconButton
               onClick={() => table.firstPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              <DoubleArrowLeftIcon className="h-4 text-[#B2B2B2] dark:text-slate-500" />
+              <DoubleArrowLeftIcon />
             </IconButton>
             <IconButton
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              <ChevronLeftIcon className="h-4 text-[#B2B2B2] dark:text-slate-500" />
+              <ChevronLeftIcon />
             </IconButton>
             <IconButton
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              <ChevronRightIcon className="h-4 text-[#B2B2B2] dark:text-slate-500" />
+              <ChevronRightIcon />
             </IconButton>
             <IconButton
               onClick={() => table.lastPage()}
               disabled={!table.getCanNextPage()}
             >
-              <DoubleArrowRightIcon className="h-4 text-[#B2B2B2] dark:text-slate-500" />
-            </IconButton>{" "}
+              <DoubleArrowRightIcon />
+            </IconButton>{' '}
           </Flex>
         </Flex>
       </Flex>

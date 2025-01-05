@@ -1,7 +1,7 @@
 import '@xyflow/react/dist/style.css';
-import React, { useCallback, useState } from 'react';
-import { LoaderFunction } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import React, { useCallback, useState, useEffect } from 'react';
+import { ActionFunction, LoaderFunction } from '@remix-run/node';
+import { useFetcher, useLoaderData } from '@remix-run/react';
 import { createSupabaseServerClient } from '../utils/supabase.server';
 import {
   Background,
@@ -26,24 +26,47 @@ import CustomEdge from '../components/workflow-builder/customEdges/customeEdge';
 import { useShallow } from 'zustand/react/shallow';
 import useWorkflowStore, { WorkflowState } from '../store/workflowStore';
 
-export const loader: LoaderFunction = async ({ request }) => {
+export const loader: LoaderFunction = async ({ request, params }) => {
   try {
+    const id = params.id;
     const { supabaseClient } = createSupabaseServerClient(request);
     const { data, error } = await supabaseClient
       .from('workflow_templates')
       .select()
-      .eq('id', '1')
+      .eq('id', id)
       .single();
     if (error) {
       console.error('Error fetching workflows:', error);
-      throw { error: 'Failed to fetch workflows' };
+      throw error;
     }
+
     return Response.json({ workflow: data as WorkflowTemplate });
   } catch (error) {
     return Response.json(`Failed to fetch workflows: ${error}`, {
       status: 500,
     });
   }
+};
+
+export const action: ActionFunction = async ({ request }) => {
+  const formData = await request.formData();
+  if (!formData.has('workflow')) {
+    return new Response('No workflow data found', { status: 400 });
+  }
+  const workflow = JSON.parse(formData.get('workflow') as string);
+
+  const { supabaseClient } = createSupabaseServerClient(request);
+  const { data, error } = await supabaseClient
+    .from('workflow_templates')
+    .upsert(workflow).eq('id', 1);
+
+  if (error) {
+    return new Response(`Failed to save workflow: ${error.message}`, { status: 500 });
+  }
+
+  console.log('Workflow saved:', data);
+
+  return new Response('Workflow saved successfully');
 };
 
 const nodeTypes: NodeTypes = {
@@ -72,18 +95,32 @@ export default function Workflows() {
     nodes,
     edges,
     setNodes,
+    setEdges,
+    setWorkflowConfig,
     workflowConfig,
     onConnect,
     onNodesChange,
     onEdgesChange,
   } = useWorkflowStore(useShallow(selector));
 
+  const { submit } = useFetcher();
+
+  useEffect(() => {
+    if (workflow) {
+      setNodes(workflow.nodes as WorkflowState['nodes']);
+      setEdges(workflow.edges);
+      setWorkflowConfig(workflow.config);
+    }
+  }, [workflow, setNodes, setEdges, setWorkflowConfig]);
+
+  console.log('Workflow:', workflow);
+
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance | null>(null);
 
   const getYpos = useCallback((prevNodes: Node[]) => {
     return prevNodes.length > 0
-      ? Math.max(...prevNodes.map((n) => n.position.y)) + 100
+      ? Math.max(...prevNodes.map((n) => n.position.y + (n?.height || 100)))
       : 100;
   }, []);
 
@@ -103,13 +140,22 @@ export default function Workflows() {
         expectJson: false,
         zodSchema: '',
         inputMapping: {},
+        availableInputs: [],
         stepOutput: '',
+        llmParams: {
+          temperature: 0.2,
+        },
+        variables: {
+          required: [],
+          optional: [],
+        },
+        output: 'rawText',
       },
     };
+
     setNodes([...nodes, newNode]);
   }, [getYpos, nodes, setNodes]);
 
-  // 8) addForEachNode
   const addForEachNode = useCallback(() => {
     const id = uuidv4();
     const newNode: ForEachWorkflowNodeType = {
@@ -135,21 +181,28 @@ export default function Workflows() {
           inputMapping: {},
           zodSchema: '',
           stepOutput: '',
+          availableInputs: [],
+          llmParams: {
+            temperature: 0.2,
+          },
+          variables: {
+            required: [],
+            optional: [],
+          },
+          output: 'rawText',
         },
-        availableInputs: []
       },
     };
     setNodes([...nodes, newNode]);
   }, [getYpos, nodes, setNodes]);
 
-  // 9) onSave
   const onSave = useCallback(() => {
     if (!reactFlowInstance) return;
     const flow = reactFlowInstance.toObject();
 
     const workflowToSave = {
-      id: workflow?.id,
-      name: workflowConfig.name,
+      id: workflow.id,
+      name: workflow.name,
       config: workflowConfig,
       nodes: nodes.map((node) => {
         const { availableInputs, onChange, ...restOfData } = node.data;
@@ -164,7 +217,15 @@ export default function Workflows() {
 
     console.log('Workflow to save:', workflowToSave);
     console.log('Workflow JSON:', JSON.stringify(workflowToSave, null, 2));
-  }, [reactFlowInstance, workflow, workflowConfig, nodes, edges]);
+
+    const formData = new FormData();
+    formData.append('workflow', JSON.stringify(workflowToSave));
+
+    submit(formData, {
+      method: 'POST',
+      action: `/admin/workflows/${workflow?.id}`,
+    });
+  }, [ workflow, workflowConfig, nodes, edges]);
 
   return (
     <div style={{ width: 'calc("100vw - 250px")', height: '100vh' }}>
@@ -185,7 +246,6 @@ export default function Workflows() {
         fitViewOptions={{ padding: 2 }}
         onInit={setReactFlowInstance}
         defaultEdgeOptions={{
-          type: 'workflow',
           animated: true,
         }}
       >

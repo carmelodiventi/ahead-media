@@ -34,22 +34,21 @@ const PromptModal: React.FC<PromptModalProps> = ({
           rows={10}
           placeholder={'Type message here.'}
           onBlur={onBlur}
-        >
-          {prompt}
-        </TextArea>
+          defaultValue={prompt}
+        />
         <Flex direction={'column'} justify="end" my="4">
           <Text size="2" mt="4">
             Prompt Variables:
             <Flex gap="2" mt="2">
               <Text size="2">Required:</Text>{' '}
               {extractVariables(prompt)?.required?.map((v) => (
-                <Badge>{v}</Badge>
+                <Badge key={`required-${v}`}>{v}</Badge>
               ))}
             </Flex>
             <Flex gap="2" mt="2">
               <Text size="2">Optional:</Text>{' '}
               {extractVariables(prompt)?.optional?.map((v) => (
-                <Badge>{v}</Badge>
+                <Badge key={`optional-${v}`}>{v}</Badge>
               ))}
             </Flex>
           </Text>
