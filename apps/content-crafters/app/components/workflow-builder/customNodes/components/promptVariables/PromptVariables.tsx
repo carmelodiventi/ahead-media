@@ -6,16 +6,18 @@ import {
   Grid,
   Strong,
   Text,
+  TextField,
 } from '@radix-ui/themes';
 import {
   RegularWorkflowStep,
   WorkflowNode,
 } from '../../../../../types/Workflow.types';
 import useWorkflowState from '../../../../../hooks/useWorkflowState';
-import { Fragment } from 'react';
+import React, { Fragment } from 'react';
 import CustomHandle from '../../../customHandle';
 import { Position } from '@xyflow/system';
 import { OnConnect } from '@xyflow/react';
+import { InputIcon } from '@radix-ui/react-icons';
 
 const PromptVariables: React.FC<{
   data: RegularWorkflowStep & Record<string, unknown>;
@@ -64,21 +66,27 @@ const PromptVariables: React.FC<{
                   px={'4'}
                 >
                   <Strong>{variable}</Strong>
+
+
+
                   <DropdownMenu.Root modal={true}>
                     <DropdownMenu.Trigger>
-                      <Button
-                        type={'button'}
-                        variant={'outline'}
-                        color={'gray'}
+                      <TextField.Root
+                        placeholder={'Type something...'}
+                        className={'nodrag noflow'}
+                        defaultValue={
+                          data.inputMapping[variable]
+                            ? data.inputMapping[variable].startsWith('initialInput')
+                              ? `Initial Input: ${variable}`
+                              : `Receiving Input`
+                            : 'Select Source'
+                        }
+                        readOnly={Boolean(data.inputMapping[variable])}
                       >
-                        {data.inputMapping[variable]
-                          ? data.inputMapping[variable].startsWith(
-                              'initialInput'
-                            )
-                            ? `Initial Input: ${variable}`
-                            : `Receiving Input: ${data.inputMapping[variable]}`
-                          : 'Select Source'}
-                      </Button>
+                        <TextField.Slot side={'right'}>
+                          <InputIcon />
+                        </TextField.Slot>
+                      </TextField.Root>
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content>
                       <DropdownMenu.Item
