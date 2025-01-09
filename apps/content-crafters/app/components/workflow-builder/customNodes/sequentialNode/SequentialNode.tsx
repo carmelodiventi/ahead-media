@@ -2,11 +2,7 @@ import React from 'react';
 import { NodeProps } from '@xyflow/react';
 import { RegularWorkflowNodeType } from '../../../../types/Workflow.types';
 import CustomNode from '../customNode/CustomNode';
-import {
-  Box,
-  Grid,
-  Text,
-} from '@radix-ui/themes';
+import { Box, Grid, Text } from '@radix-ui/themes';
 import InputPrompt from '../components/inputPrompt/InputPrompt';
 import InputSlider from '../components/inputSlider';
 import MappingEditor from '../components/mappingEditor';
@@ -16,15 +12,13 @@ import PromptVariables from '../components/promptVariables/PromptVariables';
 import StepName from '../components/stepName/StepName';
 import InputSwitch from '../components/inputSwitch/inputSwitch';
 import Output from '../components/output/Output';
-import SchemaBuilder from "../components/schemaBuilder";
+import SchemaBuilder from '../components/schemaBuilder';
 
 const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
   props
 ) => {
   const { data, id } = props;
-  const { config, onNodeChange, onConfigChange } =
-    useWorkflowState();
-
+  const { config, onNodeChange, onConfigChange } = useWorkflowState();
 
   return (
     <CustomNode
@@ -34,7 +28,6 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
       }}
     >
       <Grid gap="4" align="start">
-
         <StepName data={data} />
 
         <InputPrompt
@@ -143,17 +136,19 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
           <Box px={'4'}>
             <Text size="2">Schema:</Text>
             <SchemaBuilder
-              showValidation={true}
-              value={data.zodSchema || []}
-              onChange={(schema) =>
-                onNodeChange(id, { ...data, zodSchema: schema })
-              }
+              value={data.zodSchema}
+              onChange={(schema) => {
+                console.log(schema);
+                onNodeChange(id, {
+                  ...data,
+                  zodSchema: schema,
+                });
+              }}
             />
           </Box>
         )}
 
         <Output data={data} />
-
       </Grid>
     </CustomNode>
   );

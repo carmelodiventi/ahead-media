@@ -11,38 +11,32 @@ interface SchemaField {
  * @param fields - Array of schema fields
  * @returns A Zod schema object
  */
-export const generateZodSchema = (fields: SchemaField[]): z.ZodTypeAny => {
-  const schemaObject: Record<string, z.ZodTypeAny> = {};
-
+export const generateZodSchema = (fields: SchemaField[]): Record<string, any> => {
+  const schema: Record<string, any> = {};
   fields.forEach((field) => {
     switch (field.type) {
       case 'string':
-        schemaObject[field.key] = z.string();
+        schema[field.key] = z.string();
         break;
       case 'number':
-        schemaObject[field.key] = z.number();
+        schema[field.key] = z.number();
         break;
       case 'boolean':
-        schemaObject[field.key] = z.boolean();
+        schema[field.key] = z.boolean();
         break;
       case 'array':
-        // Arrays must handle a single child schema or default to `z.any()`
-        schemaObject[field.key] = z.array(
+        schema[field.key] = z.array(
           field.children && field.children.length > 0
-            ? generateZodSchema(field.children) // Generate schema for children
-            : z.any() // Default to `any` if no children are specified
+            ? generateZodSchema(field.children)[field.children[0]?.key] || z.any()
+            : z.any()
         );
         break;
       case 'object':
-        schemaObject[field.key] = z.object(
-          field.children ? generateZodSchema(field.children) : {}
-        );
+        schema[field.key] = z.object(generateZodSchema(field.children || []));
         break;
       default:
-        // Fallback for unsupported types
-        schemaObject[field.key] = z.any();
+        schema[field.key] = z.any();
     }
   });
-
-  return z.object(schemaObject);
+  return schema;
 };

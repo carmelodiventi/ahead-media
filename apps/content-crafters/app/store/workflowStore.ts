@@ -30,6 +30,7 @@ export interface WorkflowState {
     updatedData: RegularWorkflowStep | ForEachWorkflowStep
   ) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
+  onEdgesDelete: (edges: Edge[]) => void;
   onConnect: (connection: Connection) => void;
   onConfigChange: (config: WorkflowConfig) => void;
 }
@@ -53,6 +54,25 @@ const useWorkflowStore = create<WorkflowState>((set, get) => ({
     set({
       edges: applyEdgeChanges(changes, get().edges),
     });
+  },
+  onEdgesDelete: (edgesToDelete) => {
+    const { nodes, edges, onNodeChange, setEdges } = get();
+
+    edgesToDelete.forEach((edgeToDelete) => {
+      const targetNode = edgeToDelete.target;
+      const node = nodes.find((node) => node.id === targetNode);
+      if (!node) return;
+
+      const { [edgeToDelete.targetHandle as string]: _, ...newInputMapping } = node.data
+        .inputMapping as Record<string, string>;
+
+      onNodeChange(targetNode, {
+        ...node.data,
+        inputMapping: newInputMapping,
+      });
+    });
+
+    setEdges(edges.filter((edge) => !edgesToDelete.includes(edge)));
   },
   onConnect: (connection: Connection) => {
     const edge = { ...connection, type: 'customEdge' };

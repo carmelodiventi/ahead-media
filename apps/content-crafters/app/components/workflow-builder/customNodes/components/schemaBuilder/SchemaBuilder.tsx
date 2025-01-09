@@ -1,164 +1,225 @@
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import {
+  Box,
   Button,
   Card,
+  Flex,
   Grid,
-  Heading,
+  IconButton,
   Select,
   TextField,
+  Text,
 } from '@radix-ui/themes';
-import { SchemaField } from '../../../../../types/Workflow.types';
-import { generateZodSchema } from '../../../utils/generateZodSchema';
-
+import { PlusIcon, TrashIcon } from '@radix-ui/react-icons';
+import Ajv from 'ajv';
+const ajv = new Ajv();
 const SCHEMA_TYPES = ['string', 'number', 'boolean', 'array', 'object'];
 
 interface SchemaBuilderProps {
-  value: SchemaField[];
-  onChange: (schema: SchemaField[]) => void;
-  showValidation?: boolean;
+  value: Record<string, any>;
+  onChange: (value: Record<string, any>) => void;
 }
 
 const SchemaBuilder: React.FC<SchemaBuilderProps> = ({ value, onChange }) => {
-  const [schema, setSchema] = useState<SchemaField[]>(value || []);
+  const handleChange = useCallback(
+    (updatedSchema) => {
+      onChange(updatedSchema);
+    },
+    [onChange]
+  );
 
-  console.log(schema, generateZodSchema(schema));
+  const handleAddProperty = useCallback(
+    (path) => {
+      const updatedSchema = { ...value };
 
-  const handleAddField = () => {
-    setSchema([...schema, { key: '', type: 'string' }]);
-  };
+      // Traverse the path and initialize any missing objects
+      let current = updatedSchema;
+      for (const segment of path) {
+        if (!current.properties) {
+          current.properties = {}; // Ensure the current node has properties
+        }
+        current =
+          current.properties[segment] ||
+          (current.properties[segment] = { type: 'object', properties: {} });
+      }
 
-  const handleFieldChange = (index: number, field: Partial<SchemaField>) => {
-    const newSchema = [...schema];
-    newSchema[index] = { ...newSchema[index], ...field };
-    setSchema(newSchema);
-    onChange(newSchema); // Notify parent
-  };
+      if (!current.properties) {
+        current.properties = {}; // Initialize properties if not already defined
+      }
 
-  const handleRemoveField = (index: number) => {
-    const newSchema = schema.filter((_, i) => i !== index);
-    setSchema(newSchema);
-    onChange(newSchema); // Notify parent
-  };
+      // Add a new default property
+      current.properties[`newKey${Object.keys(current.properties).length}`] = {
+        type: 'string',
+      };
+      handleChange(updatedSchema); // Notify parent
+    },
+    [value, handleChange]
+  );
 
-  return (
-    <Card my="2">
-      <Heading size="3" weight="bold" mb="2">
-        Schema Builder
-      </Heading>
-      <Grid gap="2">
-        {schema.map((field, index) => (
-          <Card key={index}>
-            <Grid gap="1">
-              <TextField.Root
-                placeholder="Key"
-                value={field.key}
-                onChange={(e) =>
-                  handleFieldChange(index, { key: e.target.value })
+  const handleFieldKeyChange = useCallback(
+    (path, oldKey, newKey) => {
+      const updatedSchema = { ...value };
+      const currentField = path.reduce(
+        (acc, cur) => acc.properties[cur],
+        updatedSchema
+      );
+
+      if (currentField.properties[oldKey]) {
+        const fieldValue = currentField.properties[oldKey];
+        delete currentField.properties[oldKey];
+        currentField.properties[newKey] = fieldValue;
+      }
+
+      handleChange(updatedSchema);
+    },
+    [value, handleChange]
+  );
+
+  const handleFieldTypeChange = useCallback(
+    (path, key, newType) => {
+      const updatedSchema = { ...value };
+      const currentField = path.reduce(
+        (acc, cur) => acc.properties[cur],
+        updatedSchema
+      );
+
+      currentField.properties[key] = {
+        type: newType,
+        ...(newType === 'object' && { properties: {}, required: [] }),
+        ...(newType === 'array' && { items: { type: 'string' } }),
+      };
+
+      handleChange(updatedSchema);
+    },
+    [value, handleChange]
+  );
+
+  const handleRemoveField = useCallback(
+    (path, key) => {
+      const updatedSchema = { ...value };
+      const parent = path.reduce(
+        (acc, cur) => acc.properties[cur],
+        updatedSchema
+      );
+
+      if (parent.properties && parent.properties[key]) {
+        delete parent.properties[key];
+      }
+
+      handleChange(updatedSchema);
+    },
+    [value, handleChange]
+  );
+
+  const renderFields = (node, path = []) => {
+    if (!node.properties) return null;
+
+    return Object.entries(node.properties).map(([key, field], index) => {
+      return (
+        <Card key={index}>
+          <Flex gap={'2'} align={'center'}>
+            <TextField.Root
+              placeholder="Key"
+              value={key}
+              onChange={(e) => {
+                const newKey = e.target.value;
+                handleFieldKeyChange(path, key, newKey); // Update the key without recreating the element
+              }}
+              onBlur={(e) => {
+                const newKey = e.target.value.trim();
+                if (newKey !== key) {
+                  handleFieldKeyChange(path, key, newKey); // Commit changes on blur
                 }
-              />
+              }}
+            />
+
+            {/* Field Type Selector */}
+            <Select.Root
+              value={field.type}
+              onValueChange={(type) => handleFieldTypeChange(path, key, type)}
+            >
+              <Select.Trigger>{field.type}</Select.Trigger>
+              <Select.Content>
+                {SCHEMA_TYPES.map((type) => (
+                  <Select.Item key={type} value={type}>
+                    {type}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+
+            {/* Delete Button */}
+            <IconButton
+              variant="outline"
+              radius="full"
+              color="red"
+              onClick={() => handleRemoveField(path, key)}
+            >
+              <TrashIcon />
+            </IconButton>
+
+            {field.type === 'object' && (
+              <Box>
+                <IconButton
+                  variant="outline"
+                  radius="full"
+                  onClick={() => handleAddProperty([...path, key])}
+                >
+                  <PlusIcon />
+                </IconButton>
+              </Box>
+            )}
+          </Flex>
+
+          {field.type === 'object' && (
+            <Grid gap={'2'} my={'2'}>
+              {renderFields(field, [...path, key])}
+            </Grid>
+          )}
+
+          {field.type === 'array' && (
+            <Box>
+              <strong>Items Type:</strong>
               <Select.Root
-                value={field.type}
-                onValueChange={(type) =>
-                  handleFieldChange(index, {
-                    type,
-                    children:
-                      type === 'object' || type === 'array' ? [] : undefined,
-                  })
-                }
+                value={field.items?.type || 'string'}
+                onValueChange={(type) => {
+                  handleFieldTypeChange([...path, key], 'items', type);
+                }}
               >
-                <Select.Trigger>{field.type}</Select.Trigger>
+                <Select.Trigger placeholder={'Items Type'}>
+                  {field.items?.type || 'string'}
+                </Select.Trigger>
                 <Select.Content>
-                  {SCHEMA_TYPES.map((type) => (
+                  {SCHEMA_TYPES.filter((t) => t !== 'array').map((type) => (
                     <Select.Item key={type} value={type}>
                       {type}
                     </Select.Item>
                   ))}
                 </Select.Content>
               </Select.Root>
+              {field.items?.type === 'object' &&
+                renderFields(field.items, [...path, key])}
+            </Box>
+          )}
+        </Card>
+      );
+    });
+  };
 
-              {field.type === 'array' ? (
-                <>
-                  <Select.Root
-                    value={field.children?.[0]?.type || 'string'}
-                    onValueChange={(itemType) => {
-                      if (['string', 'number', 'boolean'].includes(itemType)) {
-                        // Primitive arrays: single type with no nested children
-                        handleFieldChange(index, {
-                          children: [{ key: 'item', type: itemType }],
-                        });
-                      } else if (itemType === 'object') {
-                        // Nested object arrays
-                        handleFieldChange(index, {
-                          children: [
-                            {
-                              key: '',
-                              type: 'object',
-                              children: [],
-                            },
-                          ],
-                        });
-                      }
-                    }}
-                  >
-                    <Select.Trigger>
-                      {field.children?.[0]?.type || 'string'}
-                    </Select.Trigger>
-                    <Select.Content>
-                      {SCHEMA_TYPES.filter((type) => type !== 'array').map(
-                        (type) => (
-                          <Select.Item key={type} value={type}>
-                            {type}
-                          </Select.Item>
-                        )
-                      )}
-                    </Select.Content>
-                  </Select.Root>
-
-                  {/* If the array contains nested objects, render SchemaBuilder for them */}
-                  {field.children && field.children[0]?.type === 'object' && (
-                    <SchemaBuilder
-                      value={field.children[0].children || []}
-                      onChange={(nestedSchema) => {
-                        handleFieldChange(index, {
-                          children: [
-                            {
-                              ...field.children![0],
-                              children: nestedSchema,
-                            },
-                          ],
-                        });
-                      }}
-                    />
-                  )}
-                </>
-              ) : field.type === 'object' ? (
-                // Render SchemaBuilder for nested objects
-                <SchemaBuilder
-                  value={field.children || []}
-                  onChange={(nestedSchema) =>
-                    handleFieldChange(index, { children: nestedSchema })
-                  }
-                />
-              ) : null}
-
-              <Button
-                variant="ghost"
-                color="red"
-                onClick={() => handleRemoveField(index)}
-              >
-                Remove
-              </Button>
-            </Grid>
-          </Card>
-        ))}
-      </Grid>
-
-      <Grid gap="2">
-        <Button variant="ghost" onClick={handleAddField} mt="2">
-          Add Field
-        </Button>
-      </Grid>
-    </Card>
+  return (
+    <Grid gap={'2'}>
+      <h3>Schema Builder</h3>
+      <Button onClick={() => handleFieldTypeChange([], 'newKey', 'object')}>
+        Add Top-Level Property
+      </Button>
+      <div>{renderFields(value)}</div>
+      <pre style={{ backgroundColor: '#f4f4f4', padding: '1rem' }}>
+        {JSON.stringify(value, null, 2)}
+      </pre>
+      <Text color={ajv.validateSchema(value) ? 'green': 'red'}>
+        {ajv.validateSchema(value) ? 'Valid schema' : 'Invalid schema'}
+      </Text>
+    </Grid>
   );
 };
 

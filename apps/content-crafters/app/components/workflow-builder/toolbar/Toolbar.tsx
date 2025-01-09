@@ -1,7 +1,7 @@
 import './index.css';
 import React from 'react';
 import { Toolbar, ToggleGroup, ToggleItem } from '@radix-ui/react-toolbar';
-import { Heading, Separator } from '@radix-ui/themes';
+import {Button, Heading, Separator} from '@radix-ui/themes';
 import { ToolbarOptionsProps } from './Toolbar.types';
 
 const ToolbarOptions: React.FC<ToolbarOptionsProps> = ({
@@ -9,6 +9,7 @@ const ToolbarOptions: React.FC<ToolbarOptionsProps> = ({
   addSequentialNode,
   addForEachNode,
   onSave,
+  isSaving,
 }) => {
   return (
     <Toolbar className="ToolbarRoot">
@@ -35,14 +36,15 @@ const ToolbarOptions: React.FC<ToolbarOptionsProps> = ({
           Add ForEach Step
         </ToggleItem>
         <Separator className="ToolbarSeparator" orientation={'vertical'} />
-        <ToggleItem
-          className="ToolbarToggleItem"
+        <Button
+          variant="ghost"
+          loading={isSaving}
           value="save"
           aria-label="save"
           onClick={onSave}
         >
           Save
-        </ToggleItem>
+        </Button>
       </ToggleGroup>
     </Toolbar>
   );

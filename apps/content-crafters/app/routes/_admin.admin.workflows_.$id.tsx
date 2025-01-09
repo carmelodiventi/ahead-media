@@ -25,6 +25,7 @@ import ForEachNode from '../components/workflow-builder/customNodes/forEachNode'
 import { useShallow } from 'zustand/react/shallow';
 import useWorkflowStore, { WorkflowState } from '../store/workflowStore';
 import ButtonEdge from '../components/workflow-builder/customEdges/buttonEdge';
+import {Box} from "@radix-ui/themes";
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   try {
@@ -92,6 +93,7 @@ const selector = (state: WorkflowState) => ({
   onConnect: state.onConnect,
   onNodesChange: state.onNodesChange,
   onEdgesChange: state.onEdgesChange,
+  onEdgesDelete: state.onEdgesDelete,
 });
 
 export default function Workflows() {
@@ -107,9 +109,10 @@ export default function Workflows() {
     onConnect,
     onNodesChange,
     onEdgesChange,
+    onEdgesDelete
   } = useWorkflowStore(useShallow(selector));
 
-  const { submit } = useFetcher();
+  const { submit, state } = useFetcher();
 
   useEffect(() => {
     if (workflow) {
@@ -232,9 +235,25 @@ export default function Workflows() {
     });
   }, [workflow, workflowConfig, nodes, edges]);
 
+  // on page leave save the workflow
+
+  useEffect(() => {
+    const handleUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+      alert('Saving workflow before leaving');
+      onSave();
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+    };
+  }, [onSave]);
+
   return (
-    <div style={{ width: 'calc("100vw - 250px")', height: '100vh' }}>
+    <Box style={{ width: 'calc("100vw - 250px")', height: '100vh' }}>
       <Toolbar
+        isSaving={state === 'loading' || state === 'submitting'}
         workflow={{
           id: workflow.id,
           name: workflow.name,
@@ -249,6 +268,7 @@ export default function Workflows() {
         edges={edges}
         onNodesChange={onNodesChange as any}
         onEdgesChange={onEdgesChange}
+        onEdgesDelete={onEdgesDelete}
         edgeTypes={edgeTypes}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
@@ -263,6 +283,6 @@ export default function Workflows() {
         <MiniMap />
         <Background gap={12} size={1} />
       </ReactFlow>
-    </div>
+    </Box>
   );
 }
