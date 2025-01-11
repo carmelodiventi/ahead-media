@@ -16,6 +16,7 @@ import { FormEvent, useState } from 'react';
 import * as Label from '@radix-ui/react-label';
 import { action } from '../../../routes/_app.app.documents';
 import useTemplates from '../../../hooks/useTemplates/useTemplates';
+import {WorkflowTemplate} from "../../../types/Workflow.types";
 
 const DocumentFinder = () => {
   const [step, setStep] = useState({
@@ -24,7 +25,7 @@ const DocumentFinder = () => {
   });
 
   const { templates, filter } = useTemplates();
-  const [template, setTemplate] = useState<null | Template>(null);
+  const [template, setTemplate] = useState<null | Pick<WorkflowTemplate, 'id' | 'name' | 'description' | 'config' | 'template_prompt'>>(null);
   const fetcher = useFetcher<typeof action>();
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -46,7 +47,7 @@ const DocumentFinder = () => {
   };
 
   const handleSelectTemplate = (value: string) => {
-    setTemplate(templates?.find((t) => t.id === Number(value)) || null);
+    setTemplate(templates?.find((t) => t.id === value) || null);
     setStep({
       selectTemplate: false,
       selectMetaSettings: true,
@@ -108,7 +109,7 @@ const DocumentFinder = () => {
                     {templates?.map((template) => (
                       <RadioCards.Item value={String(template.id)} mb={'1'}>
                         <Flex direction="column" width="100%">
-                          <Text weight="bold">{template.title}</Text>
+                          <Text weight="bold">{template.name}</Text>
                           <Text truncate>{template.description}</Text>
                         </Flex>
                       </RadioCards.Item>
@@ -119,22 +120,27 @@ const DocumentFinder = () => {
 
               {step.selectMetaSettings && (
                 <>
-                  <Flex
+                  <Grid
                     gap="2"
-                    direction="row"
+                    columns={'auto 1fr 30px'}
                     className={'PromptEditor'}
                     p={'4'}
                   >
                     <Text wrap={'nowrap'}>{template?.template_prompt}</Text>
-                    <Text wrap={'wrap'} contentEditable="true"></Text>
+                    <Text wrap={'wrap'} contentEditable="true" style={{
+                      outline: 'none',
+                      color: 'var(--gray-a8)',
+                    }}></Text>
 
                     <IconButton
                       type="submit"
-                      variant="solid"
-                      color="blue">
+                      variant="ghost"
+                      radius="full"
+                      highContrast={true}
+                      color="gray">
                       <PaperPlaneIcon />
                     </IconButton>
-                  </Flex>
+                  </Grid>
 
                   <Flex
                     direction={'column'}
@@ -142,11 +148,11 @@ const DocumentFinder = () => {
                     className={'PromptEditor-UserInput'}
                   >
                     <Grid columns={'3'} gap="2">
-                      {template?.user_inputs.map((input) => (
+                      {template?.config?.inputs && Object.keys(template.config.inputs).map((input) => (
                         <>
                           <Box gridColumnStart={'1'} gridColumnEnd={'2'}>
                             <Label.Root htmlFor="language" aria-colcount={1}>
-                              {input.name}
+                              {template?.config?.inputs[input].description}
                             </Label.Root>
                           </Box>
                           <Box gridColumnStart={'2'} gridColumnEnd={'4'}>

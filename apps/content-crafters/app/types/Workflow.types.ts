@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { Edge, Node, Viewport } from '@xyflow/react';
 import { OpenAIBaseInput } from '@langchain/openai';
 import { ExtractedVars } from '../components/workflow-builder/utils/extractVariables';
@@ -18,7 +17,8 @@ export interface WorkflowConfig {
 export interface WorkflowTemplate {
   id: string;
   name: string;
-  description: string;
+  description?: string;
+  template_prompt?: string;
   config: WorkflowConfig;
   nodes: Node[];
   edges: Edge[];
@@ -35,11 +35,13 @@ export enum StepType {
   ForEach = 'forEach',
 }
 
-export type SchemaField = {
-  key: string;
+export interface Schema {
   type: string;
-  children?: SchemaField[]; // For nested objects
-};
+  properties?: Record<string, Schema>;
+  required?: string[];
+  items?: Schema;
+}
+
 
 /**
  * A standard sequential step in the workflow
@@ -50,7 +52,7 @@ export interface RegularWorkflowStep {
   type: StepType;
   llmParams: Partial<OpenAIBaseInput>;
   expectJson: boolean;
-  zodSchema?: SchemaField[];
+  zodSchema?: Schema;
   stream: boolean;
   systemPrompt: string;
   userPrompt: string;
@@ -84,10 +86,9 @@ export type WorkflowStep = RegularWorkflowStep | ForEachWorkflowStep;
  * Describes a user-supplied input to the entire workflow
  */
 export interface WorkflowInput {
-  type: string; // e.g., 'string', 'number', 'array'
+  label: string;
   description?: string;
-  defaultValue?: any;
-  required: boolean;
+  defaultValue: string;
 }
 
 /**

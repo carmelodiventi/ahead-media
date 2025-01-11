@@ -138,7 +138,6 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
             <SchemaBuilder
               value={data.zodSchema}
               onChange={(schema) => {
-                console.log(schema);
                 onNodeChange(id, {
                   ...data,
                   zodSchema: schema,

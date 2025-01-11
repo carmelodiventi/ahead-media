@@ -4948,6 +4948,11 @@ json-pointer@^0.6.2:
   dependencies:
     foreach "^2.0.4"
 
+json-schema-to-zod@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/json-schema-to-zod/-/json-schema-to-zod-2.6.0.tgz#7c6bd5de73ecfcfafd58ed841431cbc99315a317"
+  integrity sha512-6sFZqOzHZeON8g2ZW5HJ114Hb/FffNCjWh8dgulJaKFkUqKCEWZAzF4+g07SQpfBZF7HXemwedtdLypZzmnVpQ==
+
 json-schema-traverse@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz#ae7bcb3656ab77a73ba5c49bf654f38e6b6860e2"

@@ -2,10 +2,13 @@ import { FormEvent, useEffect, useState } from 'react';
 import to from 'await-to-js';
 import request from '../../helpers/request';
 import { LoaderData } from '../../routes/app.templates';
+import { WorkflowTemplate } from '../../types/Workflow.types';
 
 function useTemplates() {
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [originalTemplates, setOriginalTemplates] = useState<Template[]>([]);
+  const [templates, setTemplates] = useState<Pick<WorkflowTemplate, 'id' | 'name' | 'description' | 'config' | 'template_prompt'>[]>([]);
+  const [originalTemplates, setOriginalTemplates] = useState<
+    Pick<WorkflowTemplate, 'id' | 'name' | 'description' | 'config' | 'template_prompt'>[]
+  >([]);
 
   const filter = (event: FormEvent<HTMLInputElement>) => {
     const { value } = event.currentTarget;
@@ -16,7 +19,7 @@ function useTemplates() {
     }
 
     const filtered = originalTemplates.filter((template) =>
-      template.title.toLowerCase().includes(value.toLowerCase())
+      template.name.toLowerCase().includes(value.toLowerCase())
     );
 
     setTemplates(filtered);
@@ -45,7 +48,7 @@ function useTemplates() {
 
   return {
     filter,
-    templates
+    templates,
   };
 }
 
