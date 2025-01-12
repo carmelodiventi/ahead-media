@@ -14,7 +14,6 @@ import {
 } from '@xyflow/react';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  ForEachWorkflowNodeType,
   RegularWorkflowNodeType,
   StepType,
   WorkflowTemplate,
@@ -25,7 +24,7 @@ import ForEachNode from '../components/workflow-builder/customNodes/forEachNode'
 import { useShallow } from 'zustand/react/shallow';
 import useWorkflowStore, { WorkflowState } from '../store/workflowStore';
 import ButtonEdge from '../components/workflow-builder/customEdges/buttonEdge';
-import {Box} from "@radix-ui/themes";
+import { Box } from '@radix-ui/themes';
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   try {
@@ -33,7 +32,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     const { supabaseClient } = createSupabaseServerClient(request);
     const { data, error } = await supabaseClient
       .from('workflow_templates')
-      .select()
+      .select('*')
       .eq('id', id)
       .single();
     if (error) {
@@ -54,7 +53,9 @@ export const action: ActionFunction = async ({ request }) => {
   if (!formData.has('workflow')) {
     return new Response('No workflow data found', { status: 400 });
   }
-  const workflow: WorkflowTemplate = JSON.parse(formData.get('workflow') as string);
+  const workflow: WorkflowTemplate = JSON.parse(
+    formData.get('workflow') as string
+  );
 
   const { supabaseClient } = createSupabaseServerClient(request);
   const { data, error } = await supabaseClient
@@ -63,7 +64,7 @@ export const action: ActionFunction = async ({ request }) => {
       ...workflow,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', 1);
+    .eq('id', workflow.id);
 
   if (error) {
     return new Response(`Failed to save workflow: ${error.message}`, {
@@ -109,7 +110,7 @@ export default function Workflows() {
     onConnect,
     onNodesChange,
     onEdgesChange,
-    onEdgesDelete
+    onEdgesDelete,
   } = useWorkflowStore(useShallow(selector));
 
   const { submit, state } = useFetcher();
@@ -133,7 +134,7 @@ export default function Workflows() {
       : 100;
   }, []);
 
-  const addSequentialNode = useCallback(() => {
+  const addNode = useCallback(() => {
     const id = uuidv4();
     const newNode: RegularWorkflowNodeType = {
       id,
@@ -141,13 +142,17 @@ export default function Workflows() {
       position: { x: 100, y: getYpos(nodes) },
       data: {
         id,
-        name: 'New Sequential Step',
+        name: 'New Step',
         type: StepType.Sequential,
         systemPrompt: '',
         userPrompt: '',
         stream: false,
         expectJson: false,
-        zodSchema: [],
+        zodSchema: {
+          type: 'object',
+          properties: {},
+          required: [],
+        },
         inputMapping: {},
         availableInputs: [],
         stepOutput: '',
@@ -162,46 +167,6 @@ export default function Workflows() {
       },
     };
 
-    setNodes([...nodes, newNode]);
-  }, [getYpos, nodes, setNodes]);
-
-  const addForEachNode = useCallback(() => {
-    const id = uuidv4();
-    const newNode: ForEachWorkflowNodeType = {
-      id,
-      type: StepType.ForEach,
-      position: { x: 100, y: getYpos(nodes) },
-      data: {
-        name: 'New ForEach Step',
-        type: StepType.ForEach,
-        for_each_config: {
-          source: '',
-          field: '',
-          item_input_parameter_name: '',
-        },
-        sub_step: {
-          id,
-          name: 'New Sequential Sub Step',
-          type: StepType.Sequential,
-          systemPrompt: '',
-          userPrompt: '',
-          stream: false,
-          expectJson: false,
-          inputMapping: {},
-          zodSchema: [],
-          stepOutput: '',
-          availableInputs: [],
-          llmParams: {
-            temperature: 0.2,
-          },
-          variables: {
-            required: [],
-            optional: [],
-          },
-          output: 'rawText',
-        },
-      },
-    };
     setNodes([...nodes, newNode]);
   }, [getYpos, nodes, setNodes]);
 
@@ -252,17 +217,6 @@ export default function Workflows() {
 
   return (
     <Box style={{ width: 'calc("100vw - 250px")', height: '100vh' }}>
-      <Toolbar
-        isSaving={state === 'loading' || state === 'submitting'}
-        workflow={{
-          id: workflow.id,
-          name: workflow.name,
-          config: workflowConfig,
-        }}
-        onSave={onSave}
-        addSequentialNode={addSequentialNode}
-        addForEachNode={addForEachNode}
-      />
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -279,6 +233,18 @@ export default function Workflows() {
           animated: true,
         }}
       >
+        <Toolbar
+          isSaving={state === 'loading' || state === 'submitting'}
+          workflow={{
+            id: workflow.id,
+            name: workflow.name,
+            description: workflow.description,
+            template_prompt: workflow.template_prompt,
+            config: workflowConfig,
+          }}
+          onSave={onSave}
+          addNode={addNode}
+        />
         <Controls />
         <MiniMap />
         <Background gap={12} size={1} />

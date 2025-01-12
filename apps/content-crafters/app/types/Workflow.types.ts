@@ -7,8 +7,8 @@ import { ExtractedVars } from '../components/workflow-builder/utils/extractVaria
  * Overall workflow config
  */
 export interface WorkflowConfig {
-  inputs?: Record<string, WorkflowInput>;
-  variables?: ExtractedVars;
+  inputs: Record<string, WorkflowInput>;
+  variables: ExtractedVars;
 }
 
 /**
@@ -47,7 +47,7 @@ export interface Schema {
  * A standard sequential step in the workflow
  */
 export interface RegularWorkflowStep {
-  id?: string;
+  id: string;
   name: string;
   type: StepType;
   llmParams: Partial<OpenAIBaseInput>;
@@ -66,15 +66,13 @@ export interface RegularWorkflowStep {
 /**
  * A forEach step that processes an array of items
  */
-export interface ForEachWorkflowStep {
-  name: string;
+export interface ForEachWorkflowStep extends RegularWorkflowStep {
   type: StepType;
   for_each_config: {
     source: string;
     field: string;
     item_input_parameter_name: string;
   };
-  sub_step: RegularWorkflowStep;
 }
 
 /**
@@ -87,8 +85,9 @@ export type WorkflowStep = RegularWorkflowStep | ForEachWorkflowStep;
  */
 export interface WorkflowInput {
   label: string;
-  description?: string;
+  placeholder?: string;
   defaultValue: string;
+  required: boolean;
 }
 
 /**
@@ -104,9 +103,7 @@ export type RegularWorkflowNodeType = Node<
  */
 export type ForEachWorkflowNodeType = Node<
   ForEachWorkflowStep &
-    Record<string, unknown> & {
-      sub_step: RegularWorkflowStep;
-    },
+    Record<string, unknown>,
   'forEach'
 >;
 

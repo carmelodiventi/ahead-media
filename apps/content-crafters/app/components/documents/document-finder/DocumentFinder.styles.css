@@ -30,3 +30,16 @@
   line-height: 24px !important;
   max-height: 200px;
 }
+
+.PromptEditor-UserInput-PromptTemplate {
+  color: var(--gray-a8);
+  font-size: 1.2rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.PromptEditor-UserInput-PromptTemplate:empty:before {
+  content: attr(data-placeholder);
+  color: var(--gray-a8);
+}

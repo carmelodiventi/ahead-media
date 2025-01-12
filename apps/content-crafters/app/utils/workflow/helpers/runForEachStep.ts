@@ -40,11 +40,11 @@ export async function runForEachStep(
 
     const forEachResult = await runWorkflowStep(
       llm,
-      step.sub_step,
+      step,
       subStepInputs
     );
     if (forEachResult === null) {
-      console.error(`Error in forEach sub-step: ${step.sub_step.name}`);
+      console.error(`Error in forEach sub-step: ${step.name}`);
       return null;
     }
     forEachResults.push(forEachResult);

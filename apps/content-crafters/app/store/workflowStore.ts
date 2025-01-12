@@ -4,6 +4,7 @@ import {
   RegularWorkflowStep,
   StepType,
   WorkflowConfig,
+  WorkflowInput,
   WorkflowNode,
 } from '../types/Workflow.types';
 import {
@@ -15,7 +16,7 @@ import {
   EdgeChange,
   NodeChange,
 } from '@xyflow/react';
-import {extractJsonKeys} from "../components/workflow-builder/utils/extractJsonKeys";
+import { ExtractedVars } from '../components/workflow-builder/utils/extractVariables';
 
 export interface WorkflowState {
   nodes: WorkflowNode[];
@@ -41,12 +42,90 @@ const useWorkflowStore = create<WorkflowState>((set, get) => ({
   workflowConfig: {
     inputs: {},
     variables: {
-      required: [],
-      optional: [],
+      required: [] as string[],
+      optional: [] as string[],
     },
   },
   onNodesChange: (changes: NodeChange<WorkflowNode>[]) => {
+    const nodes = get().nodes;
+    const inputs = get().workflowConfig.inputs;
+    const variables = {
+      required: [] as string[],
+      optional: [] as string[],
+    };
+
+    nodes.forEach((node) => {
+      const initialInput: Record<string, WorkflowInput> = {};
+
+      if (node.data.inputMapping) {
+        const inputMapping = node.data.inputMapping as Record<string, string>;
+        Object.keys(inputMapping).forEach((value) => {
+          if (inputMapping[value].includes('initialInput')) {
+            initialInput[value] = {
+              ...inputs[value],
+              required: false,
+            };
+          }
+        });
+
+        const nodeVariables = node.data.variables as ExtractedVars;
+
+        // Merge variables into config
+        if (nodeVariables.required) {
+          variables.required = [
+            ...new Set([...variables.required, ...nodeVariables.required]),
+          ];
+        }
+        if (nodeVariables.optional) {
+          variables.optional = [
+            ...new Set([...variables.optional, ...nodeVariables.optional]),
+          ];
+        }
+
+        // Ensure all required variables are included in initialInput
+        if (nodeVariables.required) {
+          nodeVariables.required.forEach((variable) => {
+            if (!initialInput[variable]) {
+              initialInput[variable] = {
+                ...inputs[variable],
+                required: true,
+              };
+            } else {
+              initialInput[variable].required = true;
+            }
+          });
+        }
+      }
+
+      set({
+        workflowConfig: {
+          ...get().workflowConfig,
+          variables,
+          inputs: {
+            ...get().workflowConfig.inputs,
+            ...initialInput,
+          },
+        },
+      });
+    });
+
+    // Remove inputs that are mapped to node outputs
+    const updatedInputs = { ...get().workflowConfig.inputs };
+    nodes.forEach((node) => {
+      const inputMapping = node.data.inputMapping as Record<string, string>;
+      if (!inputMapping) return;
+      Object.keys(inputMapping).forEach((value) => {
+        if (!inputMapping[value].includes('initialInput')) {
+          delete updatedInputs[value];
+        }
+      });
+    });
+
     set({
+      workflowConfig: {
+        ...get().workflowConfig,
+        inputs: updatedInputs,
+      },
       nodes: applyNodeChanges(changes, get().nodes),
     });
   },
@@ -63,8 +142,8 @@ const useWorkflowStore = create<WorkflowState>((set, get) => ({
       const node = nodes.find((node) => node.id === targetNode);
       if (!node) return;
 
-      const { [edgeToDelete.targetHandle as string]: _, ...newInputMapping } = node.data
-        .inputMapping as Record<string, string>;
+      const { [edgeToDelete.targetHandle as string]: _, ...newInputMapping } =
+        node.data.inputMapping as Record<string, string>;
 
       onNodeChange(targetNode, {
         ...node.data,
@@ -103,18 +182,6 @@ const useWorkflowStore = create<WorkflowState>((set, get) => ({
               data: {
                 ...node.data,
                 ...updatedNodeData,
-                ...(updatedNodeData.stepOutput && {
-                  outputMetadata: {
-                    type:
-                      typeof updatedNodeData.stepOutput === 'object'
-                        ? 'json'
-                        : 'text',
-                    keys:
-                      typeof updatedNodeData.stepOutput === 'object'
-                        ? extractJsonKeys(updatedNodeData.stepOutput)
-                        : ['rawText'],
-                  },
-                }),
               },
             };
           }

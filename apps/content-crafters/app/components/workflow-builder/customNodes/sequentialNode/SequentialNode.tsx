@@ -13,21 +13,24 @@ import StepName from '../components/stepName/StepName';
 import InputSwitch from '../components/inputSwitch/inputSwitch';
 import Output from '../components/output/Output';
 import SchemaBuilder from '../components/schemaBuilder';
+import StepType from "../components/stepType";
 
 const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
   props
 ) => {
   const { data, id } = props;
-  const { config, onNodeChange, onConfigChange } = useWorkflowState();
+  const { onNodeChange } = useWorkflowState();
 
   return (
     <CustomNode
       data={{
-        label: 'Sequential Step',
-        description: 'Executes a step sequentially in the workflow',
+        label: 'Langflow Step',
+        description: 'Executes a step in the flow',
       }}
     >
       <Grid gap="4" align="start">
+        <StepType data={data} />
+
         <StepName data={data} />
 
         <InputPrompt
@@ -46,13 +49,6 @@ const SequentialNode: React.FC<NodeProps<RegularWorkflowNodeType>> = (
               ...data,
               userPrompt: prompt,
               variables: extractVariables(prompt),
-            });
-            onConfigChange({
-              ...config,
-              variables: {
-                ...config.variables,
-                ...extractVariables(prompt),
-              },
             });
           }}
         />

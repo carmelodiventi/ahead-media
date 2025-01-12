@@ -8,15 +8,20 @@ import {
   Select,
   TextField,
   Grid,
-  Box, IconButton,
+  Box,
+  IconButton,
 } from '@radix-ui/themes';
-import {CaretRightIcon, MagnifyingGlassIcon, PaperPlaneIcon} from '@radix-ui/react-icons';
+import {
+  CaretRightIcon,
+  MagnifyingGlassIcon,
+  PaperPlaneIcon,
+} from '@radix-ui/react-icons';
 import { Form, useFetcher } from '@remix-run/react';
-import { FormEvent, useState } from 'react';
+import { FormEvent, Fragment, useState } from 'react';
 import * as Label from '@radix-ui/react-label';
 import { action } from '../../../routes/_app.app.documents';
 import useTemplates from '../../../hooks/useTemplates/useTemplates';
-import {WorkflowTemplate} from "../../../types/Workflow.types";
+import { WorkflowTemplate } from '../../../types/Workflow.types';
 
 const DocumentFinder = () => {
   const [step, setStep] = useState({
@@ -25,7 +30,10 @@ const DocumentFinder = () => {
   });
 
   const { templates, filter } = useTemplates();
-  const [template, setTemplate] = useState<null | Pick<WorkflowTemplate, 'id' | 'name' | 'description' | 'config' | 'template_prompt'>>(null);
+  const [template, setTemplate] = useState<null | Pick<
+    WorkflowTemplate,
+    'id' | 'name' | 'description' | 'config' | 'template_prompt'
+  >>(null);
   const fetcher = useFetcher<typeof action>();
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -53,6 +61,12 @@ const DocumentFinder = () => {
       selectMetaSettings: true,
     });
   };
+
+  const requiredInputs =
+    template &&
+    Object.keys(template.config.inputs).find(
+      (input) => template.config.inputs[input].required
+    );
 
   return (
     <>
@@ -127,17 +141,30 @@ const DocumentFinder = () => {
                     p={'4'}
                   >
                     <Text wrap={'nowrap'}>{template?.template_prompt}</Text>
-                    <Text wrap={'wrap'} contentEditable="true" style={{
-                      outline: 'none',
-                      color: 'var(--gray-a8)',
-                    }}></Text>
+                    <Text
+                      wrap={'wrap'}
+                      contentEditable="true"
+                      className={'PromptEditor-UserInput-PromptTemplate'}
+                      style={{
+                        outline: 'none',
+                        color: 'var(--gray-a8)',
+                      }}
+                      onChange={(e) => {
+                        console.log(e);
+                      }}
+                      data-placeholder={
+                        requiredInputs &&
+                        template.config.inputs[requiredInputs].placeholder
+                      }
+                    ></Text>
 
                     <IconButton
                       type="submit"
                       variant="ghost"
                       radius="full"
                       highContrast={true}
-                      color="gray">
+                      color="gray"
+                    >
                       <PaperPlaneIcon />
                     </IconButton>
                   </Grid>
@@ -148,27 +175,35 @@ const DocumentFinder = () => {
                     className={'PromptEditor-UserInput'}
                   >
                     <Grid columns={'3'} gap="2">
-                      {template?.config?.inputs && Object.keys(template.config.inputs).map((input) => (
-                        <>
-                          <Box gridColumnStart={'1'} gridColumnEnd={'2'}>
-                            <Label.Root htmlFor="language" aria-colcount={1}>
-                              {template?.config?.inputs[input].description}
-                            </Label.Root>
-                          </Box>
-                          <Box gridColumnStart={'2'} gridColumnEnd={'4'}>
-                            {input.type === 'text' && (
-                              <textarea
-                                className={'PromptEditor-UserInput-Textarea'}
-                                name={input.name}
-                                placeholder={input.placeholder}
-                                style={{
-                                  width: '100%',
-                                }}
-                              ></textarea>
-                            )}
-                          </Box>
-                        </>
-                      ))}
+                      {template?.config?.inputs &&
+                        Object.keys(template.config.inputs).map((input) => {
+                          if (template.config.inputs[input].required)
+                            return null;
+                          return (
+                            <Fragment key={input}>
+                              <Box gridColumnStart={'1'} gridColumnEnd={'2'}>
+                                <Label.Root
+                                  htmlFor="language"
+                                  aria-colcount={1}
+                                >
+                                  {template?.config?.inputs[input].label}
+                                </Label.Root>
+                              </Box>
+                              <Box gridColumnStart={'2'} gridColumnEnd={'4'}>
+                                <textarea
+                                  className={'PromptEditor-UserInput-Textarea'}
+                                  name={input}
+                                  placeholder={
+                                    template.config.inputs[input].placeholder
+                                  }
+                                  style={{
+                                    width: '100%',
+                                  }}
+                                ></textarea>
+                              </Box>
+                            </Fragment>
+                          );
+                        })}
                     </Grid>
                   </Flex>
                 </>
