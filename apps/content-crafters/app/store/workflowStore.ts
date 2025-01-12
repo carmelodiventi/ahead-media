@@ -47,86 +47,54 @@ const useWorkflowStore = create<WorkflowState>((set, get) => ({
     },
   },
   onNodesChange: (changes: NodeChange<WorkflowNode>[]) => {
-    const nodes = get().nodes;
-    const inputs = get().workflowConfig.inputs;
+    const updatedNodes = applyNodeChanges(changes, get().nodes);
+
+    // Preserve input handling logic
+    const existingInputs = get().workflowConfig.inputs;
+    const newInputs: Record<string, WorkflowInput> = {};
     const variables = {
       required: [] as string[],
       optional: [] as string[],
     };
 
-    nodes.forEach((node) => {
-      const initialInput: Record<string, WorkflowInput> = {};
-
+    updatedNodes.forEach((node) => {
       if (node.data.inputMapping) {
         const inputMapping = node.data.inputMapping as Record<string, string>;
-        Object.keys(inputMapping).forEach((value) => {
-          if (inputMapping[value].includes('initialInput')) {
-            initialInput[value] = {
-              ...inputs[value],
+
+        Object.entries(inputMapping).forEach(([key, mapping]) => {
+          if (mapping.startsWith('initialInput')) {
+            newInputs[key] = {
+              ...existingInputs[key],
               required: false,
             };
           }
         });
 
         const nodeVariables = node.data.variables as ExtractedVars;
-
-        // Merge variables into config
         if (nodeVariables.required) {
-          variables.required = [
-            ...new Set([...variables.required, ...nodeVariables.required]),
-          ];
+          nodeVariables.required.forEach((variable) => {
+            if (newInputs[variable]) {
+              newInputs[variable].required = true;
+            }
+          });
         }
+
         if (nodeVariables.optional) {
           variables.optional = [
             ...new Set([...variables.optional, ...nodeVariables.optional]),
           ];
         }
-
-        // Ensure all required variables are included in initialInput
-        if (nodeVariables.required) {
-          nodeVariables.required.forEach((variable) => {
-            if (!initialInput[variable]) {
-              initialInput[variable] = {
-                ...inputs[variable],
-                required: true,
-              };
-            } else {
-              initialInput[variable].required = true;
-            }
-          });
-        }
       }
-
-      set({
-        workflowConfig: {
-          ...get().workflowConfig,
-          variables,
-          inputs: {
-            ...get().workflowConfig.inputs,
-            ...initialInput,
-          },
-        },
-      });
     });
 
-    // Remove inputs that are mapped to node outputs
-    const updatedInputs = { ...get().workflowConfig.inputs };
-    nodes.forEach((node) => {
-      const inputMapping = node.data.inputMapping as Record<string, string>;
-      if (!inputMapping) return;
-      Object.keys(inputMapping).forEach((value) => {
-        if (!inputMapping[value].includes('initialInput')) {
-          delete updatedInputs[value];
-        }
-      });
-    });
-
+    // Set updated nodes and workflowConfig in the state
     set({
+      nodes: updatedNodes, // Ensure nodes are updated
       workflowConfig: {
         ...get().workflowConfig,
-        inputs: updatedInputs,
+        inputs: newInputs,
+        variables,
       },
-      nodes: applyNodeChanges(changes, get().nodes),
     });
   },
   onEdgesChange: (changes: EdgeChange[]) => {
@@ -172,7 +140,6 @@ const useWorkflowStore = create<WorkflowState>((set, get) => ({
                 ...node.data,
                 ...updatedNodeData,
                 for_each_config: updatedNodeData.for_each_config,
-                sub_step: updatedNodeData.sub_step,
               },
             };
           } else {

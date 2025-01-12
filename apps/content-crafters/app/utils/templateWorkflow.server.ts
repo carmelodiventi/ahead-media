@@ -1,41 +1,54 @@
 import { ChatOpenAI } from '@langchain/openai';
-import {
-  ForEachWorkflowStep, RegularWorkflowStep,
-  StepType,
-  WorkflowConfig,
-} from '../types/Workflow.types';
-import { getStepInputs } from './workflow/helpers/getStepInputs';
+import { WorkflowNode, WorkflowTemplate } from '../types/Workflow.types';
 import { runForEachStep } from './workflow/helpers/runForEachStep';
 import { runWorkflowStep } from './workflow/helpers/runWorkflowStep';
+import { resolveStepInputs } from './workflow/helpers/resolveStepInputs';
 
 export async function runWorkflow(
-  workflowConfig: WorkflowConfig,
+  workflow: WorkflowTemplate,
   initialInputs: Record<string, any>
 ): Promise<Record<string, any> | null> {
-
   const llm = new ChatOpenAI({ model: 'gpt-4o-mini' });
   const stepResults: Record<string, any> = {};
 
-  for (const step of workflowConfig.steps) {
+  for (const node of workflow.nodes) {
     let stepResult;
-    if (step.type === StepType.ForEach) {
-      const currentStep = step as ForEachWorkflowStep;
+
+    // Resolve inputs for the current node using the helper
+    const stepInputs = resolveStepInputs(
+      node.data.inputMapping as Record<string, string>,
+      initialInputs,
+      stepResults,
+      node.data.name as string,
+      node.data.variables?.required || [],
+      node.data.variables?.optional || []
+    );
+
+    if (!stepInputs) {
+      console.error(`Failed to resolve inputs for step "${node.data.name}"`);
+      return null;
+    }
+
+    // Execute the step
+    if (node.data.type === 'forEach') {
       stepResult = await runForEachStep(
         llm,
-        currentStep,
+        node as WorkflowNode,
         initialInputs,
         stepResults
       );
     } else {
-      const currentStep = step as RegularWorkflowStep;
-      const stepInputs = await getStepInputs(currentStep, initialInputs, stepResults);
-      stepResult = await runWorkflowStep(llm, currentStep, stepInputs);
+      stepResult = await runWorkflowStep(llm, node as WorkflowNode, stepInputs);
     }
+
+    // Handle errors
     if (stepResult === null) {
-      console.error(`Step "${step.name}" failed, stopping workflow.`);
+      console.error(`Step "${node.data.name}" failed, stopping workflow.`);
       return null;
     }
-    stepResults[step.name] = stepResult;
+
+    // Save step result for downstream dependencies
+    stepResults[node.data.id as string] = stepResult;
   }
 
   console.log('Workflow Complete');

@@ -1,16 +1,19 @@
-import { RegularWorkflowStep } from '../../../types/Workflow.types';
+import { WorkflowNode } from '../../../types/Workflow.types';
 import { ChatOpenAI } from '@langchain/openai';
 import { parseResponse } from './parseResponse';
 
 export async function runLlmStep(
   llm: ChatOpenAI,
-  stepConfig: RegularWorkflowStep,
+  stepConfig: WorkflowNode,
   formattedPrompt: string
 ): Promise<any> {
   try {
     let result;
-    if (stepConfig.stream) {
-      const stream = await llm.stream(formattedPrompt, stepConfig.llmParams);
+    if (stepConfig.data.stream) {
+      const stream = await llm.stream(
+        formattedPrompt,
+        stepConfig.data.llmParams
+      );
       let fullResponse = '';
 
       for await (const chunk of stream) {
@@ -22,13 +25,13 @@ export async function runLlmStep(
 
       result = parseResponse(fullResponse, stepConfig);
     } else {
-      result = await llm.invoke(formattedPrompt, stepConfig.llmParams);
-      return parseResponse(result.content as string, stepConfig);
+      result = await llm.invoke(formattedPrompt, stepConfig.data.llmParams);
+      return parseResponse(result.content as string, stepConfig.data);
     }
 
     return result;
   } catch (error) {
-    console.error(`Error in step ${stepConfig.name}:`, error);
+    console.error(`Error in step ${stepConfig.data.name}:`, error);
     return null;
   }
 }

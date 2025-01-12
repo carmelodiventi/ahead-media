@@ -200,21 +200,6 @@ export default function Workflows() {
     });
   }, [workflow, workflowConfig, nodes, edges]);
 
-  // on page leave save the workflow
-
-  useEffect(() => {
-    const handleUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = '';
-      alert('Saving workflow before leaving');
-      onSave();
-    };
-    window.addEventListener('beforeunload', handleUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleUnload);
-    };
-  }, [onSave]);
-
   return (
     <Box style={{ width: 'calc("100vw - 250px")', height: '100vh' }}>
       <ReactFlow

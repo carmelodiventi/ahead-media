@@ -1,28 +1,50 @@
-import {ChatOpenAI} from "@langchain/openai";
-import {RegularWorkflowStep} from "../../../types/Workflow.types";
-import {validateStepConfig} from "./validateStepConfig";
-import {buildPromptTemplate} from "./buildPromptTemplate";
-import {formatPromptWithInputs} from "./formatPromptWithInputs";
-import {runLlmStep} from "./runLlmStep";
+import { ChatOpenAI } from '@langchain/openai';
+import { WorkflowNode } from '../../../types/Workflow.types';
+import { validateStepConfig } from './validateStepConfig';
+import { buildPromptTemplate } from './buildPromptTemplate';
+import { formatPromptWithInputs } from './formatPromptWithInputs';
+import { runLlmStep } from './runLlmStep';
 
+/**
+ * Executes a single workflow step.
+ * @param llm - The ChatOpenAI instance.
+ * @param step - The step configuration.
+ * @param inputs - The resolved inputs for this step.
+ * @returns The result of the LLM execution.
+ */
 export async function runWorkflowStep(
   llm: ChatOpenAI,
-  step: RegularWorkflowStep,
+  step: WorkflowNode,
   inputs: Record<string, any>
 ): Promise<any> {
   try {
+    // Validate the step configuration and inputs
     await validateStepConfig(step, inputs);
+
+    // Build the prompt template from the step
     const promptTemplate = buildPromptTemplate(step);
-    const formattedPrompt = await formatPromptWithInputs(promptTemplate, inputs);
-    console.log('formattedPrompt', formattedPrompt);
+
+    // Format the prompt with the provided inputs
+    const formattedPrompt = await formatPromptWithInputs(
+      promptTemplate,
+      inputs
+    );
+    console.log('Formatted Prompt:', formattedPrompt);
+
+    // Run the LLM step with the formatted prompt
     const result = await runLlmStep(llm, step, formattedPrompt);
+
+    // If the LLM step fails, log and return null
     if (result === null) {
-      console.error(`LLM step "${step.name}" failed.`);
+      console.error(`LLM step "${step.data.name}" failed.`);
       return null;
     }
+
+    // Return the result of the LLM execution
     return result;
   } catch (error) {
-    console.error(`Error running step "${step.name}":`, error);
+    // Handle errors gracefully
+    console.error(`Error running step "${step.data.name}":`, error);
     return null;
   }
 }

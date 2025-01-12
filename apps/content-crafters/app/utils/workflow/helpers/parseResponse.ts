@@ -1,41 +1,33 @@
-import { RegularWorkflowStep } from '../../../types/Workflow.types';
-import {ZodTypeAny} from "zod";
+import { Schema, WorkflowNode } from '../../../types/Workflow.types';
+import { JsonOutputParser } from '@langchain/core/output_parsers';
 
-export function parseResponse(
+export async function parseResponse(
   response: string,
-  stepConfig: RegularWorkflowStep
-): string | object | null {
-  // Explicitly define return types
-
-  if (!stepConfig.expectJson && !stepConfig.zodSchema) {
-    return response; // Return raw response if JSON is NOT expected and there's no schema
+  stepConfig: WorkflowNode
+): Promise<string | object | null> {
+  // Return raw response if JSON is NOT expected and there's no schema
+  if (!stepConfig.data.expectJson && !stepConfig.data.zodSchema) {
+    return response;
   }
 
   try {
-    const extractedJson = response
-      .trim()
-      .replace(/^```json\n/, '')
-      .replace(/\n```$/, '');
+    // Instantiate JsonOutputParser with an optional schema
+    const jsonParser = new JsonOutputParser({
+      schema: stepConfig.data.zodSchema as Schema,
+    });
 
-    // Check if extracting JSON resulted in an empty string (meaning there was no JSON) AND JSON was expected
-    if (extractedJson === '' && stepConfig.expectJson === true) {
-      throw new Error('Expected JSON but found none.');
-    } else if (extractedJson === '') {
-      return response;
-    }
-
-    const parsedJson = JSON.parse(extractedJson); // Parse the extracted JSON
-    return stepConfig.zodSchema
-      ? (stepConfig.zodSchema as ZodTypeAny).parse(parsedJson)
-      : parsedJson; // Validate with Zod if schema exists
+    // Use the parser to validate and return the structured output
+    return await jsonParser.parse(response);
   } catch (error) {
     console.error('JSON parsing error:', error);
     console.error('Raw LLM output:', response);
 
-    if (stepConfig.expectJson === true) {
-      return null; // Return null to signal parsing failure if JSON was expected
+    if (stepConfig.data.expectJson) {
+      // Return null if JSON was expected but parsing failed
+      return null;
     } else {
-      return response; // Return raw response since JSON parsing failed and it was not explicitly expected
+      // Return raw response for non-JSON outputs
+      return response;
     }
   }
 }

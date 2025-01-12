@@ -1,16 +1,15 @@
 import { ActionFunctionArgs } from '@remix-run/node';
 import { runWorkflow } from '../utils/templateWorkflow.server';
-import { WorkflowConfig } from '../types/Workflow.types';
 import { createSupabaseServerClient } from '../utils/supabase.server';
 
-export const actions = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request }: ActionFunctionArgs) => {
 
   try{
     const formData = await request.formData();
     const templateId = formData.get('templateId');
     const initialInputs = formData.get('initialInputs');
 
-    if (!templateId || initialInputs) {
+    if (!templateId || !initialInputs) {
      throw new Error('Template id is required');
     }
 
@@ -29,7 +28,12 @@ export const actions = async ({ request }: ActionFunctionArgs) => {
       };
     }
 
-    const response = await runWorkflow(data as WorkflowConfig, {});
+    const initialInputsObj = JSON.parse(initialInputs as string);
+
+    const response = await runWorkflow(data, initialInputsObj);
+
+    console.log('Workflow response:', response);
+
     return {
       response,
     };

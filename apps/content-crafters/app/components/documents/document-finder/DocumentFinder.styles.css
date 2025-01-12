@@ -3,6 +3,10 @@
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   box-shadow: none;
+  > span {
+    display: inline-block;
+    padding: 0.8rem;
+  }
 }
 
 .PromptEditor-UserInput {
@@ -37,6 +41,8 @@
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   box-shadow: none;
+  outline: none;
+  margin-left: .5rem;
 }
 
 .PromptEditor-UserInput-PromptTemplate:empty:before {
