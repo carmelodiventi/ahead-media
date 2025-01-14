@@ -1,20 +1,18 @@
-import { Schema, WorkflowNode } from '../../../types/Workflow.types';
+import { WorkflowNode } from '../../../types/Workflow.types';
 import { JsonOutputParser } from '@langchain/core/output_parsers';
 
 export async function parseResponse(
   response: string,
   stepConfig: WorkflowNode
 ): Promise<string | object | null> {
-  // Return raw response if JSON is NOT expected and there's no schema
-  if (!stepConfig.data.expectJson && !stepConfig.data.zodSchema) {
+  // Return raw response if JSON is NOT expected
+  if (!stepConfig.data.expectJson) {
     return response;
   }
 
   try {
     // Instantiate JsonOutputParser with an optional schema
-    const jsonParser = new JsonOutputParser({
-      schema: stepConfig.data.zodSchema as Schema,
-    });
+    const jsonParser = new JsonOutputParser();
 
     // Use the parser to validate and return the structured output
     return await jsonParser.parse(response);

@@ -29,6 +29,7 @@ export async function runWorkflowStep(
       promptTemplate,
       inputs
     );
+
     console.log('Formatted Prompt:', formattedPrompt);
 
     // Run the LLM step with the formatted prompt

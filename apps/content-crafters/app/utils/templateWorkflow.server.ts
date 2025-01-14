@@ -47,8 +47,31 @@ export async function runWorkflow(
       return null;
     }
 
-    // Save step result for downstream dependencies
-    stepResults[node.data.id as string] = stepResult;
+    if (node.data.expectJson && typeof stepResult === 'string') {
+      try {
+        const parsedResult = JSON.parse(stepResult);
+
+        if (typeof parsedResult === 'object' && parsedResult !== null) {
+          // Merge parsed JSON into stepResults under the node ID
+          stepResults[node.data.id as string] = {
+            ...stepResults[node.data.id as string], // Preserve existing data if any
+            ...parsedResult, // Merge new parsed data
+          };
+        } else {
+          console.warn(`Step "${node.data.name}" returned invalid JSON structure.`);
+          stepResults[node.data.id as string] = stepResult; // Fallback to raw result
+        }
+      } catch (error) {
+        console.error(
+          `Failed to parse JSON response from step "${node.data.name}":`,
+          error
+        );
+        return null; // Stop workflow on critical JSON parse error
+      }
+    } else {
+      stepResults[node.data.id as string] = stepResult;
+    }
+
   }
 
   console.log('Workflow Complete');

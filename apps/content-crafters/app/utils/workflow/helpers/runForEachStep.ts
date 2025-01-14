@@ -1,7 +1,6 @@
-import { resolveStepInputs } from './resolveStepInputs';
 import { ChatOpenAI } from '@langchain/openai';
 import { WorkflowNode } from '../../../types/Workflow.types';
-import {runWorkflowStep} from "./runWorkflowStep"; // Use your existing input resolution logic
+import { runWorkflowStep } from './runWorkflowStep'; // Use your existing input resolution logic
 
 export async function runForEachStep(
   llm: ChatOpenAI,
@@ -28,24 +27,27 @@ export async function runForEachStep(
   const results: any[] = [];
 
   for (const item of items) {
-    // Dynamically resolve inputs for the current iteration
-    const resolvedInputs = resolveStepInputs(
-      step.data.inputMapping || {},
-      { ...initialInputs, item },
-      stepResults,
-      step.data.name,
-    );
+    const dynamicInputs = { ...initialInputs };
 
-    if (!resolvedInputs) {
-      console.error(
-        `Failed to resolve inputs for item in "forEach" step:`,
-        item
-      );
-      continue;
+    /*
+     * TODO: Implement input mapping for "forEach" steps
+     *  check item and map it to the appropriate key in dynamicInputs
+     *  perhaps we can remove the resolveStepInputs function and use the same logic here
+     * */
+
+    // Map "item" to its appropriate key in dynamicInputs
+    for (const [key, value] of Object.entries(step.data.inputMapping || {})) {
+      if (key === for_each_config.field) {
+        dynamicInputs[key] = item; // Assign the item to the mapped key
+      } else if (value.startsWith('initialInput')) {
+        dynamicInputs[key] = initialInputs[value.split('.')[1]]; // Handle other mappings like "initialInput.tone"
+      } else if (stepResults[value]) {
+        dynamicInputs[key] = stepResults[value]; // Map other dependencies
+      }
     }
 
     // Execute the step
-    const result = await runWorkflowStep(llm, step, resolvedInputs);
+    const result = await runWorkflowStep(llm, step, dynamicInputs);
 
     if (result === null) {
       console.error(`Failed processing item in "forEach" step:`, item);
