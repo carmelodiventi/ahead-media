@@ -9,6 +9,7 @@ import {
   Grid,
   Box,
   IconButton,
+  Select,
 } from '@radix-ui/themes';
 import {
   CaretRightIcon,
@@ -16,7 +17,7 @@ import {
   PaperPlaneIcon,
 } from '@radix-ui/react-icons';
 import { Form, useFetcher } from '@remix-run/react';
-import { FormEvent, Fragment, useState } from 'react';
+import { FormEvent, Fragment, useEffect, useState } from 'react';
 import * as Label from '@radix-ui/react-label';
 import { action } from '../../../routes/_app.app.documents';
 import useTemplates from '../../../hooks/useTemplates/useTemplates';
@@ -43,19 +44,36 @@ const createSchema = (template: any) => {
 };
 
 const DocumentFinder = () => {
+  const [modalOpen, setModalOpen] = useState(false);
   const [step, setStep] = useState({
     selectTemplate: true,
     selectMetaSettings: false,
   });
-  const [initialInput, setInitialInput] = useState<Record<string, any>>({});
+  const [initialInputs, setInitialInputs] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { templates, filter } = useTemplates();
   const [template, setTemplate] = useState<null | Pick<
     WorkflowTemplate,
-    'id' | 'name' | 'description' | 'config' | 'template_prompt'
+    'id' | 'name' | 'description' | 'config' | 'template_prompt' | 'query_prompt'
   >>(null);
+  const [queryPrompt, setQueryPrompt] = useState<string>(template?.query_prompt || "");
 
   const fetcher = useFetcher<typeof action>();
+
+  useEffect(() => {
+    if (fetcher.data) {
+      if (fetcher.data.success) {
+        toast.success('Document created successfully');
+        setStep({
+          selectTemplate: true,
+          selectMetaSettings: false,
+        });
+      } else {
+        console.error(fetcher.data.error);
+        toast.error('Failed to create document');
+      }
+    }
+  }, [fetcher.data]);
 
   const handleSelectTemplate = (value: string) => {
     setTemplate(templates?.find((t) => t.id === value) || null);
@@ -91,15 +109,19 @@ const DocumentFinder = () => {
     const schema = createSchema(template);
 
     try {
-      schema.parse(initialInput); // Validate all fields
+      schema.parse(initialInputs); // Validate all fields
       // If validation passes, proceed with form submission
       const formData = new FormData(event.currentTarget);
+      formData.append('queryPrompt', queryPrompt)
+      formData.append('initialInputs', JSON.stringify(initialInputs));
       formData.append('templateId', template.id);
-      formData.append('initialInputs', JSON.stringify(initialInput));
       fetcher.submit(formData, {
         method: 'post',
-        action: '/app/ai/template-workflow',
+        action: '/app/documents',
       });
+
+      setModalOpen(false);
+
     } catch (error: any) {
       // Set errors for invalid fields
       const fieldErrors: Record<string, string> = {};
@@ -116,7 +138,9 @@ const DocumentFinder = () => {
   return (
     <>
       <Dialog.Root
+        open={modalOpen}
         onOpenChange={() => {
+          setModalOpen((prev) => !prev);
           setStep({
             selectTemplate: true,
             selectMetaSettings: false,
@@ -166,7 +190,11 @@ const DocumentFinder = () => {
                     columns={{ initial: '1' }}
                   >
                     {templates?.map((template) => (
-                      <RadioCards.Item value={String(template.id)} mb={'1'} key={template.id}>
+                      <RadioCards.Item
+                        value={String(template.id)}
+                        mb={'1'}
+                        key={template.id}
+                      >
                         <Flex direction="column" width="100%">
                           <Text weight="bold">{template.name}</Text>
                           <Text truncate>{template.description}</Text>
@@ -189,16 +217,11 @@ const DocumentFinder = () => {
                       <Text wrap={'nowrap'}>{template?.template_prompt}</Text>
                       <PromptEditor
                         placeholder={
-                          requiredInputs &&
-                          template.config.inputs[requiredInputs]?.placeholder
+                         template?.query_prompt
                         }
-                        onChange={(value) => {
-                          console.log('Prompt updated:', value);
-                          validateField(requiredInputs as string, value);
-                          setInitialInput((prev) => ({
-                            ...prev,
-                            [requiredInputs as string]: value, // Update the key with the user's value
-                          }));
+                        name="queryPrompt"
+                        onChange={(name, value) => {
+                          setQueryPrompt(value)
                         }}
                       />
                     </Box>
@@ -220,47 +243,88 @@ const DocumentFinder = () => {
                   >
                     <Grid columns={'3'} gap="2">
                       {template?.config?.inputs &&
-                        Object.keys(template.config.inputs).map((input, index) => {
-                          if (template.config.inputs[input].required)
-                            return null;
-                          return (
-                            <Fragment key={`${input}-${index}`}>
-                              <Box gridColumnStart={'1'} gridColumnEnd={'2'}>
-                                <Label.Root
-                                  htmlFor="language"
-                                  aria-colcount={1}
-                                >
-                                  {template?.config?.inputs[input].label}
-                                </Label.Root>
-                              </Box>
-                              <Box gridColumnStart={'2'} gridColumnEnd={'4'}>
-                                <textarea
-                                  className={'PromptEditor-UserInput-Textarea'}
-                                  name={input}
-                                  placeholder={
-                                    template.config.inputs[input].placeholder
-                                  }
-                                  style={{
-                                    width: '100%',
-                                  }}
-                                  onChange={(e) => {
-                                    const { name, value } = e.target;
-                                    validateField(name, value);
-                                    setInitialInput((prev) => ({
-                                      ...prev,
-                                      [name]: value, // Update the key-value pair in initialInput
-                                    }));
-                                  }}
-                                ></textarea>
-                                {errors[input] && (
-                                  <Text size="2" color="red" mt="1">
-                                    {errors[input]}
-                                  </Text>
-                                )}
-                              </Box>
-                            </Fragment>
-                          );
-                        })}
+                        Object.keys(template.config.inputs).map(
+                          (input, index) => {
+                            if (template.config.inputs[input].required)
+                              return null;
+                            return (
+                              <Fragment key={`${input}-${index}`}>
+                                <Box gridColumnStart={'1'} gridColumnEnd={'2'}>
+                                  <Label.Root
+                                    htmlFor="language"
+                                    aria-colcount={1}
+                                  >
+                                    {template?.config?.inputs[input].label}
+                                  </Label.Root>
+                                </Box>
+                                <Box gridColumnStart={'2'} gridColumnEnd={'4'}>
+                                  <textarea
+                                    className={
+                                      'PromptEditor-UserInput-Textarea'
+                                    }
+                                    name={input}
+                                    placeholder={
+                                      template.config.inputs[input].placeholder
+                                    }
+                                    style={{
+                                      width: '100%',
+                                    }}
+                                    onChange={(e) => {
+                                      const { name, value } = e.target;
+                                      validateField(name, value);
+                                      setInitialInputs((prev) => ({
+                                        ...prev,
+                                        [input]: value,
+                                      }));
+                                    }}
+                                  ></textarea>
+                                  {errors[input] && (
+                                    <Text size="2" color="red" mt="1">
+                                      {errors[input]}
+                                    </Text>
+                                  )}
+                                </Box>
+                              </Fragment>
+                            );
+                          }
+                        )}
+                      <Box gridColumnStart={'1'} gridColumnEnd={'2'}>
+                        <Label.Root htmlFor="language">Language</Label.Root>
+                      </Box>
+                      <Box gridColumnStart={'2'} gridColumnEnd={'4'}>
+                        <Select.Root name="language" defaultValue="en:English">
+                          <Select.Trigger
+                            style={{
+                              width: '100%',
+                            }}
+                          />
+                          <Select.Content>
+                            <Select.Item value="en:English">
+                              English
+                            </Select.Item>
+                          </Select.Content>
+                        </Select.Root>
+                      </Box>
+                      <Box gridColumnStart={'1'} gridColumnEnd={'2'}>
+                        <Label.Root htmlFor="country">Country</Label.Root>
+                      </Box>
+                      <Box gridColumnStart={'2'} gridColumnEnd={'4'}>
+                        <Select.Root
+                          name="country"
+                          defaultValue="uk:United Kingdom"
+                        >
+                          <Select.Trigger
+                            style={{
+                              width: '100%',
+                            }}
+                          />
+                          <Select.Content>
+                            <Select.Item value="uk:United Kingdom">
+                              United Kingdom
+                            </Select.Item>
+                          </Select.Content>
+                        </Select.Root>
+                      </Box>
                     </Grid>
                   </Flex>
                 </>

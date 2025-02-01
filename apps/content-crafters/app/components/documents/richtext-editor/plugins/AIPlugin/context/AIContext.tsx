@@ -10,6 +10,7 @@ const INITIAL_STATE = {
     query: "",
     useSearchResults: false,
     showAIAssistant: false,
+    isLoading: false,
 }
 
 const Context = createContext<AIContextType>({} as AIContextType);

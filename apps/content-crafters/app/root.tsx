@@ -8,7 +8,6 @@ import {
 import { LinksFunction } from '@remix-run/node';
 import { Theme } from '@radix-ui/themes';
 import { Toaster } from 'sonner';
-import { ThemeProvider, useTheme } from 'next-themes';
 import { ReactFlowProvider } from '@xyflow/react';
 import './styles/main.scss';
 
@@ -36,26 +35,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ThemeProvider>
-          <ReactFlowProvider>{children}</ReactFlowProvider>
-          <ScrollRestoration />
-          <Scripts />
-          <Toaster richColors />
-        </ThemeProvider>
+        <Theme grayColor="gray" panelBackground="solid" appearance={'inherit'} radius="large" scaling="95%">
+          <ReactFlowProvider>
+            {children}
+            <ScrollRestoration />
+            <Scripts />
+            <Toaster richColors />
+          </ReactFlowProvider>
+        </Theme>
       </body>
     </html>
   );
 }
 
 export default function App() {
-  const theme = useTheme();
-  return (
-    <Theme
-      grayColor="gray"
-      panelBackground="solid"
-      appearance={theme.systemTheme || 'inherit'}
-    >
-      <Outlet />
-    </Theme>
-  );
+  return <Outlet />;
 }

@@ -109,7 +109,9 @@ const ToolbarOptions: React.FC<ToolbarOptionsProps> = ({
               </Button>
             </Dialog.Trigger>
             <Dialog.Content>
+
               <Dialog.Title>Edit Config</Dialog.Title>
+
               <Dialog.Description size="2" mb="4">
                 Edit the workflow configuration.
               </Dialog.Description>
@@ -136,6 +138,14 @@ const ToolbarOptions: React.FC<ToolbarOptionsProps> = ({
                   }
                 >
                   <TextField.Slot>Template Prompt</TextField.Slot>
+                </TextField.Root>
+                <TextField.Root
+                  defaultValue={workflow.query_prompt}
+                  onChange={(e) =>
+                    handleEditTemplate({ query_prompt: e.target.value })
+                  }
+                >
+                  <TextField.Slot>Query Prompt</TextField.Slot>
                 </TextField.Root>
               </Grid>
 

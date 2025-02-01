@@ -1,26 +1,25 @@
-import { ActionFunctionArgs } from "@remix-run/node";
-import { Document as LangchainDocument } from "langchain/document";
-import { z } from "zod";
-import {createSupabaseServerClient} from "../utils/supabase.server";
-import {emitter} from "../utils/emitter.server";
-import {EVENTS} from "../costants/events";
+import { ActionFunctionArgs } from '@remix-run/node';
+import { Document as LangchainDocument } from 'langchain/document';
+import { z } from 'zod';
+import { createSupabaseServerClient } from '../utils/supabase.server';
+import { emitter } from '../utils/emitter.server';
+import { EVENTS } from '../costants/events';
 import {
   SearchResultsCompletedData,
-  SearchResultsStartedData
-} from "../components/documents/panels/components/events/Events.types";
-import {GenericEvent} from "../types/Events.types";
-import fetchSearchResults from "../utils/tools/fetchSearchResults";
-import {CustomWebLoader} from "../utils/tools/webLoader";
-import extractTaviliy from "../utils/tools/tavliy.server";
-import {updateVectorDB} from "../utils/pinecone.server";
-
+  SearchResultsStartedData,
+} from '../components/documents/panels/components/events/Events.types';
+import { GenericEvent } from '../types/Events.types';
+import fetchSearchResults from '../utils/tools/fetchSearchResults';
+import { CustomWebLoader } from '../utils/tools/webLoader';
+import extractTaviliy from '../utils/tools/tavliy.server';
+import { updateVectorDB } from '../utils/pinecone.server';
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const docHash = params.id;
-  const query = formData.get("query");
-  const country = formData.get("country");
-  const language = formData.get("language");
+  const query = formData.get('query');
+  const country = formData.get('country');
+  const language = formData.get('language');
 
   const { error: formError } = z
     .object({
@@ -32,7 +31,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
   if (formError) {
     return {
-      error: formError.errors.map((error) => error.message).join(", "),
+      error: formError.errors.map((error) => error.message).join(', '),
       success: false,
     };
   }
@@ -46,15 +45,15 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       event: SEARCH_RESULTS_STARTED,
       data: {
         doc_hash: params.id,
-        query: formData.get("query"),
+        query: formData.get('query'),
       },
     } as GenericEvent<SearchResultsStartedData>)
   );
 
   const { data: item, error: itemError } = await supabaseClient
-    .from("documents")
-    .select("*")
-    .eq("id", docHash)
+    .from('documents')
+    .select('*')
+    .eq('id', docHash)
     .single();
 
   if (itemError) {
@@ -65,28 +64,28 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   }
 
   const { error: docError, data: updateItem } = await supabaseClient
-    .from("documents")
+    .from('documents')
     .update({
       query: String(query)?.trimEnd(),
       metadata: {
         ...item.metadata,
         code: country
-          ? (country as string).split(":").at(0)
+          ? (country as string).split(':').at(0)
           : item.metadata.code,
         display_code: country
-          ? (country as string).split(":").at(1)
+          ? (country as string).split(':').at(1)
           : item.metadata.display_code,
         lang_code: language
-          ? (language as string).split(":").at(0)
+          ? (language as string).split(':').at(0)
           : item.metadata.lang_code,
         lang_display: language
-          ? (language as string).split(":").at(1)
+          ? (language as string).split(':').at(1)
           : item.metadata.lang_display,
         serp_loaded: true,
       },
     })
-    .eq("id", docHash)
-    .select("metadata")
+    .eq('id', docHash)
+    .select('metadata')
     .single();
 
   if (docError) {
@@ -104,7 +103,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   });
 
   const { data, error } = await supabaseClient
-    .from("live_search_results")
+    .from('live_search_results')
     .upsert(
       {
         doc_hash: docHash,
@@ -115,9 +114,9 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
           },
         },
       },
-      { onConflict: "doc_hash" }
+      { onConflict: 'doc_hash' }
     )
-    .select("*")
+    .select('*')
     .single();
 
   if (error) {
@@ -160,12 +159,14 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     } as GenericEvent<SearchResultsCompletedData>)
   );
 
-  const docs = await extractTaviliy(results.organic.map((result) => result.url));
+  const docs = await extractTaviliy(
+    results.organic.map((result) => result.url)
+  );
 
   await updateVectorDB({
     indexname: process.env.PINECONE_INDEX_NAME!,
     namespace: docHash!,
-    docs: docs
+    docs: docs,
   });
 
   emitter.emit(params.id as string, null);

@@ -8,6 +8,7 @@ import {
   SegmentedControl,
   Select,
   Spinner,
+  Tabs,
   Text,
   TextField,
 } from '@radix-ui/themes';
@@ -53,37 +54,42 @@ const LiveSearch = ({
 
   if (!liveSearchResults) {
     return (
-      <>
-        <Box height={'100%'} p={'8'}>
-          <Heading size="6" align="center" mb={'6'}>
-            Research
-          </Heading>
-          <Text size="3" color="gray" align="center">
-            Process the top 20 Google search results for the following search
-            query:
-          </Text>
+      <Tabs.Root defaultValue="research">
+        <Tabs.List>
+          <Tabs.Trigger value={'research'}>Research</Tabs.Trigger>
+          <Tabs.Trigger value={'knowledge'}>Knowledge</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content id={'research'} value={'research'}>
+          <Flex gap={'4'} direction={'column'} mt={'6'} width={'100%'}>
+            <Text size="3" weight={'bold'} color="gray" align="center" mb={'2'}>
+              Process the top Google search results for the following search
+              query
+            </Text>
 
-          <Form
-            onSubmit={handleQuery}
-            method="post"
-            className={'space-y-3 mt-6'}
-          >
-            <TextField.Root
-              name="query"
-              placeholder="Search query…"
-              onChange={(e) => setQuery(e.target.value)}
-              defaultValue={document.query}
-            >
-              <TextField.Slot>
-                <MagnifyingGlassIcon height="16" width="16" />
-              </TextField.Slot>
-            </TextField.Root>
-            <Button loading={fetcher.state === 'submitting'}>
-              Start <ArrowRightIcon />
-            </Button>
-          </Form>
-        </Box>
-      </>
+            <Form onSubmit={handleQuery} method="post">
+              <Flex gap={'4'} width={'100%'}>
+                <TextField.Root
+                  style={{
+                    width: '100%',
+                  }}
+                  size={'3'}
+                  name="query"
+                  placeholder="Search query…"
+                  onChange={(e) => setQuery(e.target.value)}
+                  defaultValue={document.query}
+                >
+                  <TextField.Slot>
+                    <MagnifyingGlassIcon height="16" width="16" />
+                  </TextField.Slot>
+                </TextField.Root>
+                <Button size={'3'} loading={fetcher.state === 'submitting'}>
+                  Start <ArrowRightIcon />
+                </Button>
+              </Flex>
+            </Form>
+          </Flex>
+        </Tabs.Content>
+      </Tabs.Root>
     );
   }
 

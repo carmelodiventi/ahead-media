@@ -3,7 +3,8 @@ import { eventStream } from 'remix-utils/sse/server';
 import { emitter } from '../utils/emitter.server';
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const id = params.id;
+  const { id, workflowId } = params;
+
   return eventStream(request.signal, (send) => {
     const handler = (message: string) => {
       send({
@@ -11,10 +12,10 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
       });
     };
 
-    emitter.addListener(id as string, handler);
+    emitter.addListener(`${id}-${workflowId}`, handler);
 
     return () => {
-      emitter.removeListener(id as string, handler);
+      emitter.removeListener(`${id}-${workflowId}`, handler);
     };
   });
 };

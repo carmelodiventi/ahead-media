@@ -6,12 +6,14 @@ import { resolveStepInputs } from './workflow/helpers/resolveStepInputs';
 
 export async function runWorkflow(
   workflow: WorkflowTemplate,
-  initialInputs: Record<string, any>
-): Promise<Record<string, any> | null> {
+  initialInputs: Record<string, any>,
+  onStepUpdate: ({ status, data }: { status: string; data: Record<string, any> }) => void
+): Promise<void | null> {
   const llm = new ChatOpenAI({ model: 'gpt-4o-mini' });
   const stepResults: Record<string, any> = {};
 
   for (const node of workflow.nodes) {
+    const isOutputNode = workflow.nodes.length - 1 === workflow.nodes.indexOf(node);
     let stepResult;
 
     // Resolve inputs for the current node using the helper
@@ -35,10 +37,18 @@ export async function runWorkflow(
         llm,
         node as WorkflowNode,
         initialInputs,
-        stepResults
+        stepResults,
+        isOutputNode,
+        onStepUpdate
       );
     } else {
-      stepResult = await runWorkflowStep(llm, node as WorkflowNode, stepInputs);
+      stepResult = await runWorkflowStep(
+        llm,
+        node as WorkflowNode,
+        stepInputs,
+        isOutputNode,
+        onStepUpdate
+      );
     }
 
     // Handle errors
@@ -58,7 +68,9 @@ export async function runWorkflow(
             ...parsedResult, // Merge new parsed data
           };
         } else {
-          console.warn(`Step "${node.data.name}" returned invalid JSON structure.`);
+          console.warn(
+            `Step "${node.data.name}" returned invalid JSON structure.`
+          );
           stepResults[node.data.id as string] = stepResult; // Fallback to raw result
         }
       } catch (error) {
@@ -71,9 +83,12 @@ export async function runWorkflow(
     } else {
       stepResults[node.data.id as string] = stepResult;
     }
-
   }
 
-  console.log('Workflow Complete');
-  return stepResults;
+  return onStepUpdate({
+    status: 'complete',
+    data: stepResults,
+  });
+
+
 }

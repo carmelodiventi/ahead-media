@@ -1,20 +1,20 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Text } from "@radix-ui/themes";
+import React, { useEffect, useRef } from 'react';
+import { Text } from '@radix-ui/themes';
 
 const PromptEditor = ({
-                        placeholder,
-                        onChange,
-                      }: {
+  placeholder,
+  onChange,
+  name,
+}: {
   placeholder?: string | null;
-  onChange: (value: string) => void;
+  onChange: (name: string, value: string) => void;
+  name: string;
 }) => {
-  const [value, setValue] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const newValue = e.currentTarget.textContent || "";
-    setValue(newValue);
-    onChange(newValue); // Pass the updated value to the parent
+    const newValue = e.currentTarget.textContent || '';
+    onChange(name, newValue); // Pass the updated value to the parent
   };
 
   const handleFocus = () => {
@@ -42,17 +42,17 @@ const PromptEditor = ({
       ref={editorRef}
       contentEditable="true"
       suppressContentEditableWarning={true}
-      className={"PromptEditor-UserInput-PromptTemplate"}
+      className={'PromptEditor-UserInput-PromptTemplate'}
       style={{
-        outline: "none",
-        color: "var(--gray-a8)",
-        whiteSpace: "pre-wrap", // Ensures proper line wrapping
+        minWidth: "100px",
+        outline: 'none',
+        color: 'var(--gray-a8)',
+        whiteSpace: 'pre-wrap', // Ensures proper line wrapping
       }}
       data-placeholder={placeholder}
       onInput={handleInput}
       onFocus={handleFocus}
-    >
-    </Text>
+    ></Text>
   );
 };
 

@@ -1,12 +1,15 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { WorkflowNode } from '../../../types/Workflow.types';
-import { runWorkflowStep } from './runWorkflowStep'; // Use your existing input resolution logic
+import { runWorkflowStep } from './runWorkflowStep';
+import { mapDynamicInputs } from './mapDynamicInputs'; // Use your existing input resolution logic
 
 export async function runForEachStep(
   llm: ChatOpenAI,
   step: WorkflowNode,
   initialInputs: Record<string, any>,
-  stepResults: Record<string, any>
+  stepResults: Record<string, any>,
+  isOutputNode: boolean,
+  onStepUpdate: ({ status, data }: { status: string; data: Record<string, any> }) => void,
 ): Promise<any> {
   const { for_each_config } = step.data;
 
@@ -27,27 +30,23 @@ export async function runForEachStep(
   const results: any[] = [];
 
   for (const item of items) {
-    const dynamicInputs = { ...initialInputs };
+    const dynamicInputs = mapDynamicInputs(
+      item,
+      step.data.inputMapping || {},
+      initialInputs,
+      stepResults
+    );
 
-    /*
-     * TODO: Implement input mapping for "forEach" steps
-     *  check item and map it to the appropriate key in dynamicInputs
-     *  perhaps we can remove the resolveStepInputs function and use the same logic here
-     * */
-
-    // Map "item" to its appropriate key in dynamicInputs
-    for (const [key, value] of Object.entries(step.data.inputMapping || {})) {
-      if (key === for_each_config.field) {
-        dynamicInputs[key] = item; // Assign the item to the mapped key
-      } else if (value.startsWith('initialInput')) {
-        dynamicInputs[key] = initialInputs[value.split('.')[1]]; // Handle other mappings like "initialInput.tone"
-      } else if (stepResults[value]) {
-        dynamicInputs[key] = stepResults[value]; // Map other dependencies
-      }
+    if (!dynamicInputs) {
+      console.error(
+        `Failed to map dynamic inputs for item in "forEach" step:`,
+        item
+      );
+      continue;
     }
 
     // Execute the step
-    const result = await runWorkflowStep(llm, step, dynamicInputs);
+    const result = await runWorkflowStep(llm, step, dynamicInputs, isOutputNode, onStepUpdate);
 
     if (result === null) {
       console.error(`Failed processing item in "forEach" step:`, item);

@@ -225,6 +225,7 @@ export default function Workflows() {
             name: workflow.name,
             description: workflow.description,
             template_prompt: workflow.template_prompt,
+            query_prompt: workflow.query_prompt,
             config: workflowConfig,
           }}
           onSave={onSave}

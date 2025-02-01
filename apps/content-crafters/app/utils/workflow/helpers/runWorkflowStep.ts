@@ -10,12 +10,16 @@ import { runLlmStep } from './runLlmStep';
  * @param llm - The ChatOpenAI instance.
  * @param step - The step configuration.
  * @param inputs - The resolved inputs for this step.
+ * @param isOutputNode
+ * @param onUpdate
  * @returns The result of the LLM execution.
  */
 export async function runWorkflowStep(
   llm: ChatOpenAI,
   step: WorkflowNode,
-  inputs: Record<string, any>
+  inputs: Record<string, any>,
+  isOutputNode: boolean,
+  onUpdate?: (update: any) => void,
 ): Promise<any> {
   try {
     // Validate the step configuration and inputs
@@ -33,7 +37,7 @@ export async function runWorkflowStep(
     console.log('Formatted Prompt:', formattedPrompt);
 
     // Run the LLM step with the formatted prompt
-    const result = await runLlmStep(llm, step, formattedPrompt);
+    const result = await runLlmStep(llm, step, formattedPrompt, isOutputNode, onUpdate);
 
     // If the LLM step fails, log and return null
     if (result === null) {

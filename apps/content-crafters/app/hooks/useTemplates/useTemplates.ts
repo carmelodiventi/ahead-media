@@ -3,11 +3,30 @@ import to from 'await-to-js';
 import request from '../../helpers/request';
 import { LoaderData } from '../../routes/app.templates';
 import { WorkflowTemplate } from '../../types/Workflow.types';
+import { toast } from 'sonner';
 
 function useTemplates() {
-  const [templates, setTemplates] = useState<Pick<WorkflowTemplate, 'id' | 'name' | 'description' | 'config' | 'template_prompt'>[]>([]);
+  const [templates, setTemplates] = useState<
+    Pick<
+      WorkflowTemplate,
+      | 'id'
+      | 'name'
+      | 'description'
+      | 'config'
+      | 'template_prompt'
+      | 'query_prompt'
+    >[]
+  >([]);
   const [originalTemplates, setOriginalTemplates] = useState<
-    Pick<WorkflowTemplate, 'id' | 'name' | 'description' | 'config' | 'template_prompt'>[]
+    Pick<
+      WorkflowTemplate,
+      | 'id'
+      | 'name'
+      | 'description'
+      | 'config'
+      | 'template_prompt'
+      | 'query_prompt'
+    >[]
   >([]);
 
   const filter = (event: FormEvent<HTMLInputElement>) => {
@@ -38,12 +57,20 @@ function useTemplates() {
       return;
     }
 
-    setTemplates(response.data.templates);
-    setOriginalTemplates(response.data.templates);
+    return response;
   };
 
   useEffect(() => {
-    fetchTemplates();
+    fetchTemplates()
+      .then((response) => {
+        if (response?.data) {
+          setTemplates(response.data.templates);
+          setOriginalTemplates(response.data.templates);
+        }
+      })
+      .catch((error) => {
+        toast.error(error.message);
+      });
   }, []);
 
   return {

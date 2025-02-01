@@ -1,47 +1,56 @@
-import { ActionFunctionArgs } from '@remix-run/node';
+import { redirect } from '@remix-run/node';
+
+import { DocumentStatus, DocumentTypes } from '../types/Document.types';
+import { PostgrestError } from '@supabase/supabase-js';
+import supabase from '../utils/supabase';
 import { runWorkflow } from '../utils/templateWorkflow.server';
-import { createSupabaseServerClient } from '../utils/supabase.server';
+import { emitter } from '../utils/emitter.server';
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+export async function action({ params }: { params: { id: string } }) {
 
-  try{
-    const formData = await request.formData();
-    const templateId = formData.get('templateId');
-    const initialInputs = formData.get('initialInputs');
+  try {
+    const {
+      error,
+      data: document,
+    }: {
+      error: PostgrestError | null;
+      data: DocumentTypes | null;
+    } = await supabase.from('documents').select('*').eq('id', params.id).single();
 
-    if (!templateId || !initialInputs) {
-     throw new Error('Template id is required');
+    if (error || !document || !document.metadata) {
+      return redirect('/app/documents');
     }
 
-    const { supabaseClient } = createSupabaseServerClient(request);
-
-    const { data, error } = await supabaseClient
+    const { data: template, error: templateError } = await supabase
       .from('workflow_templates')
       .select('*')
-      .eq('id', templateId)
+      .eq('id', document.template)
       .single();
 
-    if (error) {
-      return {
-        error: error.message,
-        success: false,
-      };
+    if (document.doc_status === DocumentStatus.Draft) {
+      runWorkflow(template, document.metadata.initial_inputs, (data) => {
+        emitter.emit(
+          `${document.id}-${template.id}`,
+          JSON.stringify({
+            event: 'streaming',
+            data,
+          })
+        );
+      });
     }
 
-    const initialInputsObj = JSON.parse(initialInputs as string);
+    if (templateError) {
+      throw new Error(templateError.message);
+    }
 
-    const response = await runWorkflow(data, initialInputsObj);
+    return Response.json({
+      document
+    })
 
-    console.log('Workflow response:', response);
-
-    return {
-      response,
-    };
   }
-  catch (error){
+  catch (error) {
     return new Response((error as Error).message, {
-      status: 400,
+      status: 500,
     });
   }
-
-};
+}

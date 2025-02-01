@@ -1,10 +1,10 @@
-import { Box, Button, Flex, Text } from '@radix-ui/themes';
+import { Box, Button, Flex, Text, Tooltip } from '@radix-ui/themes';
 import { HeaderProps } from './Header.types';
 import { useNavigate } from 'react-router';
 import { formatDistanceToNow } from 'date-fns';
 import React from 'react';
 
-const Header = ({ quickActions, title, edited }: HeaderProps) => {
+const Header = ({ quickActions, title, edited, actions }: HeaderProps) => {
   const navigate = useNavigate();
   const formattedDate = edited
     ? formatDistanceToNow(new Date(edited), { addSuffix: true })
@@ -27,8 +27,8 @@ const Header = ({ quickActions, title, edited }: HeaderProps) => {
           ) : (
             <Button
               key={idx}
-              {...button.color && { color: button.color }}
-              {...button.size && { variant: button.size }}
+              {...(button.color && { color: button.color })}
+              {...(button.size && { variant: button.size })}
               highContrast={true}
               variant={button.variant ?? 'ghost'}
               onClick={
@@ -43,6 +43,20 @@ const Header = ({ quickActions, title, edited }: HeaderProps) => {
             </Button>
           )
         )}
+
+        {actions &&
+          actions.map(({ action, label, icon }) => (
+            <Tooltip content={label} key={label}>
+              <Button
+                onClick={action}
+                variant={'ghost'}
+                size={'1'}
+                color={'gray'}
+              >
+                {icon ? icon : label}
+              </Button>
+            </Tooltip>
+          ))}
       </Flex>
     </Flex>
   );

@@ -18,7 +18,8 @@ export interface WorkflowTemplate {
   id: string;
   name: string;
   description?: string;
-  template_prompt?: string;
+  template_prompt: string;
+  query_prompt: string;
   config: WorkflowConfig;
   nodes: Node[];
   edges: Edge[];

@@ -8,10 +8,7 @@ import {
   Text,
   TextField,
 } from '@radix-ui/themes';
-import {
-  RegularWorkflowStep,
-  WorkflowNode,
-} from '../../../../../types/Workflow.types';
+import { RegularWorkflowStep } from '../../../../../types/Workflow.types';
 import useWorkflowState from '../../../../../hooks/useWorkflowState';
 import React, { Fragment } from 'react';
 import CustomHandle from '../../../customHandle';
@@ -31,7 +28,8 @@ const PromptVariables: React.FC<{
     if (!targetNode || !sourceNode) return;
 
     // @ts-ignore
-    const { inputMapping }: { inputMapping: Record<string, string> } = targetNode;
+    const { inputMapping }: { inputMapping: Record<string, string> } =
+      targetNode;
 
     onNodeChange(params.target, {
       ...targetNode,
@@ -72,8 +70,13 @@ const PromptVariables: React.FC<{
                         className={'nodrag noflow'}
                         defaultValue={
                           data.inputMapping[variable]
-                            ? data.inputMapping[variable].startsWith('initialInput')
-                              ? `Initial Input: ${variable}`
+                            ? data.inputMapping[variable].startsWith(
+                                'initialInput'
+                              ) ||
+                              data.inputMapping[variable].startsWith(
+                                'queryPrompt'
+                              )
+                              ? data.inputMapping[variable]
                               : `Receiving Input`
                             : 'Select Source'
                         }
@@ -84,7 +87,24 @@ const PromptVariables: React.FC<{
                         </TextField.Slot>
                       </TextField.Root>
                     </DropdownMenu.Trigger>
-                    <DropdownMenu.Content>
+                    <DropdownMenu.Content
+                      style={{
+                        width: '100%',
+                      }}
+                    >
+                      <DropdownMenu.Item
+                        onClick={() => {
+                          delete data.inputMapping[variable];
+                          onNodeChange(data.id as string, {
+                            ...data,
+                            inputMapping: {
+                              ...data.inputMapping,
+                            },
+                          });
+                        }}
+                      >
+                        Select Source
+                      </DropdownMenu.Item>
                       <DropdownMenu.Item
                         onClick={() =>
                           onNodeChange(data.id as string, {
@@ -98,10 +118,26 @@ const PromptVariables: React.FC<{
                       >
                         Initial Input
                       </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        onClick={() =>
+                          onNodeChange(data.id as string, {
+                            ...data,
+                            inputMapping: {
+                              ...data.inputMapping,
+                              [variable]: `queryPrompt.${variable}`,
+                            },
+                          })
+                        }
+                      >
+                        Query Prompt
+                      </DropdownMenu.Item>
                     </DropdownMenu.Content>
                   </DropdownMenu.Root>
 
-                  {!data.inputMapping[variable]?.includes('initialInput') ? (
+                  {!(
+                    data.inputMapping[variable]?.includes('initialInput') ||
+                    data.inputMapping[variable]?.includes('queryPrompt')
+                  ) ? (
                     <CustomHandle
                       id={variable}
                       position={Position.Left}

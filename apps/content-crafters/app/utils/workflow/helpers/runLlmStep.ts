@@ -5,7 +5,15 @@ import { parseResponse } from './parseResponse';
 export async function runLlmStep(
   llm: ChatOpenAI,
   stepConfig: WorkflowNode,
-  formattedPrompt: string
+  formattedPrompt: string,
+  isOutputNode: boolean,
+  onUpdate?: ({
+    status,
+    data,
+  }: {
+    status: string;
+    data: Record<string, any>;
+  }) => void,
 ): Promise<any> {
   try {
     let result;
@@ -20,13 +28,26 @@ export async function runLlmStep(
         if (chunk?.content) {
           process.stdout.write(chunk.content as string); // Write chunk to stdout
           fullResponse += chunk.content;
+
+          if (onUpdate && isOutputNode) {
+            onUpdate({
+              status: 'processing',
+              data: { content: chunk.content },
+            });
+          }
         }
       }
 
       result = parseResponse(fullResponse, stepConfig);
     } else {
       result = await llm.invoke(formattedPrompt, stepConfig.data.llmParams);
-      return parseResponse(result.content as string, stepConfig.data);
+
+      if (onUpdate && isOutputNode) {
+        onUpdate({
+          status: 'processing',
+          data: result,
+        }); // Send intermediate chunk to the client
+      }
     }
 
     return result;

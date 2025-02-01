@@ -10,8 +10,16 @@ interface QuickAction {
   size?: ButtonProps['size'];
   component?: JSX.Element;
 }
+
+interface Action {
+  label?: string;
+  icon?: React.ReactNode
+  action: () => void;
+}
+
 export interface HeaderProps {
   title: string;
   quickActions?: Array<QuickAction>;
+  actions?: Array<Action>
   edited?: number;
 }
