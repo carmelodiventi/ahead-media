@@ -72,9 +72,6 @@ const PromptVariables: React.FC<{
                           data.inputMapping[variable]
                             ? data.inputMapping[variable].startsWith(
                                 'initialInput'
-                              ) ||
-                              data.inputMapping[variable].startsWith(
-                                'queryPrompt'
                               )
                               ? data.inputMapping[variable]
                               : `Receiving Input`
@@ -124,7 +121,7 @@ const PromptVariables: React.FC<{
                             ...data,
                             inputMapping: {
                               ...data.inputMapping,
-                              [variable]: `queryPrompt.${variable}`,
+                              [variable]: `queryPrompt`,
                             },
                           })
                         }

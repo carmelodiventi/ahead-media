@@ -13,7 +13,7 @@ import {
   DotsHorizontalIcon,
   DownloadIcon,
   Link1Icon,
-  MagnifyingGlassIcon,
+  MagnifyingGlassIcon, PlayIcon,
   Share1Icon,
 } from '@radix-ui/react-icons';
 import { toast, toast as notify } from 'sonner';
@@ -210,6 +210,15 @@ const DocumentPreview = () => {
     }
   }, [fetcher.data]);
 
+  const handleGenerate = (documentId: string) => {
+    const formData = new FormData();
+    formData.append('id', documentId);
+    fetcher.submit(formData, {
+      method: 'post',
+      action: `/app/ai/template-workflow`
+    })
+  }
+
   return (
     <Flex>
       <Flex direction={'column'} flexGrow={'1'} position="relative">
@@ -279,6 +288,11 @@ const DocumentPreview = () => {
               icon: <MagnifyingGlassIcon />,
               label: 'Research',
               action: () => store.onIsResearching(true),
+            },
+            {
+              icon: <PlayIcon />,
+              label: 'Start generating',
+              action: () => handleGenerate(document.id),
             },
           ]}
         />

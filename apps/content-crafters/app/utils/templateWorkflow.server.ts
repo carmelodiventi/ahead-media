@@ -7,6 +7,7 @@ import { resolveStepInputs } from './workflow/helpers/resolveStepInputs';
 export async function runWorkflow(
   workflow: WorkflowTemplate,
   initialInputs: Record<string, any>,
+  queryPrompt: string,
   onStepUpdate: ({ status, data }: { status: string; data: Record<string, any> }) => void
 ): Promise<void | null> {
   const llm = new ChatOpenAI({ model: 'gpt-4o-mini' });
@@ -20,6 +21,7 @@ export async function runWorkflow(
     const stepInputs = resolveStepInputs(
       node.data.inputMapping as Record<string, string>,
       initialInputs,
+      queryPrompt,
       stepResults,
       node.data.name as string,
       node.data.variables?.required || [],

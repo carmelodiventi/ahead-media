@@ -61,6 +61,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
     const templateId = formData.get('templateId');
     const initialInputs = formData.get('initialInputs');
+    const queryPrompt = formData.get('queryPrompt');
     const country = formData.get('country');
     const language = formData.get('language');
 
@@ -132,11 +133,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     } = await supabaseClient
       .from('documents')
       .insert({
+        query: queryPrompt,
         doc_type: formData.get('doc_type') as string,
         doc_owner: user?.id,
-        doc_owner_name: user?.user_metadata.full_name,
+        doc_owner_name: user?.user_metadata?.full_name || user?.email,
         metadata: {
-          name: `${template.template_prompt} ${template.query_prompt}`,
+          name: `${template.template_prompt} ${queryPrompt}`,
           active_tab_index: 0,
           code,
           display_code,

@@ -196,7 +196,6 @@ const LiveSearch = ({
         <AlertDialog.Root open={querySettings}>
           <AlertDialog.Content maxWidth="450px">
             <AlertDialog.Title>Search query settings</AlertDialog.Title>
-
             <Form
               className="space-y-3"
               onSubmit={(e) => {

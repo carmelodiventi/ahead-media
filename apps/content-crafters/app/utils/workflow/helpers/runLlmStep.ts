@@ -45,7 +45,9 @@ export async function runLlmStep(
       if (onUpdate && isOutputNode) {
         onUpdate({
           status: 'processing',
-          data: result,
+          data: {
+            content: result.content
+          },
         }); // Send intermediate chunk to the client
       }
     }

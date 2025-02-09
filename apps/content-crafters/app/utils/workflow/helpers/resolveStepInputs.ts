@@ -1,6 +1,7 @@
 export function resolveStepInputs(
   inputMapping: Record<string, string> | undefined,
   initialInputs: Record<string, any>,
+  queryPrompt: string,
   stepResults: Record<string, any>,
   stepName: string,
   required: string[] = [],
@@ -17,7 +18,11 @@ export function resolveStepInputs(
         return null;
       }
       stepInputs[key] = value; // Set undefined for optional inputs if not provided
-    } else if (stepResults[mapping]) {
+    }
+    else if (mapping.includes('queryPrompt')){
+      stepInputs[key] = queryPrompt
+    }
+    else if (stepResults[mapping]) {
       stepInputs[key] = stepResults[mapping];
     } else {
       if (isRequired) {
