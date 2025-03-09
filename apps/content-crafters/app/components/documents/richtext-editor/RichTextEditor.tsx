@@ -14,8 +14,8 @@ import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { $insertNodes, EditorState, LexicalEditor } from 'lexical';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
-import { useFetcher, useResolvedPath, useRevalidator } from '@remix-run/react';
-import { useEffect, useState } from 'react';
+import { useFetcher } from '@remix-run/react';
+import { useState } from 'react';
 import AutoLinkPlugin from './plugins/AutoLinkPlugin';
 import { DocumentTypes } from '../../../types/Document.types';
 import theme from './theme';
@@ -30,7 +30,7 @@ import LinkPlugin from './plugins/LinkPlugin';
 import FloatingLinkEditorPlugin from './plugins/FloatingLinkEditorPlugin';
 import ParagraphPlaceholderPlugin from './plugins/ParagraphPlaceholderPlugin';
 import Panels from '../panels';
-import AIStreamer from './plugins/StreamPlugin';
+
 import { useStore } from 'zustand';
 import documentStore from '../../../store/documentStore';
 
@@ -102,6 +102,7 @@ function RichTextEditor({ document }: { document: DocumentTypes }) {
             ErrorBoundary={LexicalErrorBoundary}
           />
           <AIPlugin document={document} />
+
           <HistoryPlugin />
           <AutoFocusPlugin />
           <ListPlugin />

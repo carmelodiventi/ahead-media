@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - "3000:3000"
+    container_name: content-crafters
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    # For development, you can uncomment these lines to mount your code
+    # volumes:
+    #   - ./:/app
+    #   - /app/node_modules

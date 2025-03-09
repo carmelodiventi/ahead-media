@@ -9,15 +9,14 @@ export async function runWorkflow(
   initialInputs: Record<string, any>,
   queryPrompt: string,
   onStepUpdate: ({ status, data }: { status: string; data: Record<string, any> }) => void
-): Promise<void | null> {
+): Promise<Record<string, any> | null> {
   const llm = new ChatOpenAI({ model: 'gpt-4o-mini' });
   const stepResults: Record<string, any> = {};
 
   for (const node of workflow.nodes) {
-    const isOutputNode = workflow.nodes.length - 1 === workflow.nodes.indexOf(node);
+    const isOutputNode = workflow.nodes.length - 1 === workflow.nodes.indexOf(node as any);
     let stepResult;
 
-    // Resolve inputs for the current node using the helper
     const stepInputs = resolveStepInputs(
       node.data.inputMapping as Record<string, string>,
       initialInputs,
@@ -33,7 +32,6 @@ export async function runWorkflow(
       return null;
     }
 
-    // Execute the step
     if (node.data.type === 'forEach') {
       stepResult = await runForEachStep(
         llm,
@@ -53,7 +51,6 @@ export async function runWorkflow(
       );
     }
 
-    // Handle errors
     if (stepResult === null) {
       console.error(`Step "${node.data.name}" failed, stopping workflow.`);
       return null;
@@ -64,33 +61,36 @@ export async function runWorkflow(
         const parsedResult = JSON.parse(stepResult);
 
         if (typeof parsedResult === 'object' && parsedResult !== null) {
-          // Merge parsed JSON into stepResults under the node ID
           stepResults[node.data.id as string] = {
-            ...stepResults[node.data.id as string], // Preserve existing data if any
-            ...parsedResult, // Merge new parsed data
+            ...stepResults[node.data.id as string],
+            ...parsedResult,
           };
         } else {
-          console.warn(
-            `Step "${node.data.name}" returned invalid JSON structure.`
-          );
-          stepResults[node.data.id as string] = stepResult; // Fallback to raw result
+          console.warn(`Step "${node.data.name}" returned invalid JSON structure.`);
+          stepResults[node.data.id as string] = stepResult;
         }
       } catch (error) {
-        console.error(
-          `Failed to parse JSON response from step "${node.data.name}":`,
-          error
-        );
-        return null; // Stop workflow on critical JSON parse error
+        console.error(`Failed to parse JSON response from step "${node.data.name}":`, error);
+        return null;
       }
     } else {
       stepResults[node.data.id as string] = stepResult;
     }
+
+    // Emit intermediate results
+    if (!isOutputNode) {
+      onStepUpdate({
+        status: 'processing',
+        data: { step: node.data.name, result: stepResult },
+      });
+    }
   }
 
-  return onStepUpdate({
+  // Emit final results
+  onStepUpdate({
     status: 'complete',
     data: stepResults,
   });
 
-
+  return stepResults;
 }

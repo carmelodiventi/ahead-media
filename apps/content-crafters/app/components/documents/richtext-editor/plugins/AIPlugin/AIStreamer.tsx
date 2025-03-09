@@ -3,7 +3,7 @@ import { useResolvedPath, useRevalidator } from '@remix-run/react';
 import { useEventSource } from 'remix-utils/sse/react';
 import { DocumentTypes } from '../../../../../types/Document.types';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $insertNodes } from 'lexical';
+import {$createParagraphNode, $insertNodes, TextNode} from 'lexical';
 import { $generateNodesFromDOM } from '@lexical/html';
 import { useAIState } from './context/AIContext';
 
@@ -24,20 +24,29 @@ const AIStreamer = ({ document }: { document: DocumentTypes }) => {
 
         if (!data) return;
 
-        if(data.status) {
+        if (data.status === 'processing') {
           updateAIState({
             ...aiState,
-            isLoading: data.status === 'processing',
+            isLoading: true,
+            message: data.data.content,
           });
-          return;
-        }
+        } else if (data.status === 'generating') {
+          updateAIState({
+            ...aiState,
+            isLoading: true,
+          });
 
-        editor.update(() => {
-          const parser = new DOMParser();
-          const dom = parser.parseFromString(data, 'text/html');
-          const nodes = $generateNodesFromDOM(editor, dom);
-          $insertNodes(nodes);
-        });
+          editor.update(() => {
+            const paragraphs = data.data.content.split('\n').filter(Boolean);
+            const nodes = paragraphs.map(paragraph => {
+              const paragraphNode = $createParagraphNode();
+              const textNode = new TextNode(paragraph);
+              paragraphNode.append(textNode);
+              return paragraphNode;
+            });
+            $insertNodes(nodes);
+          });
+        }
       } catch (e) {
         console.error(e);
       }

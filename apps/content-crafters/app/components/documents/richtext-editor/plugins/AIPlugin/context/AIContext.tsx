@@ -1,4 +1,4 @@
-import React, {createContext, ReactElement, ReactNode, useContext, useMemo, useState} from "react";
+import {createContext, ReactElement, ReactNode, useContext, useMemo, useState} from "react";
 
 
 interface AIContextType {
@@ -11,6 +11,7 @@ const INITIAL_STATE = {
     useSearchResults: false,
     showAIAssistant: false,
     isLoading: false,
+    message: ''
 }
 
 const Context = createContext<AIContextType>({} as AIContextType);

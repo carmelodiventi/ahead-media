@@ -1,7 +1,7 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { WorkflowNode } from '../../../types/Workflow.types';
 import { runWorkflowStep } from './runWorkflowStep';
-import { mapDynamicInputs } from './mapDynamicInputs'; // Use your existing input resolution logic
+import { mapDynamicInputs } from './mapDynamicInputs';
 
 export async function runForEachStep(
   llm: ChatOpenAI,

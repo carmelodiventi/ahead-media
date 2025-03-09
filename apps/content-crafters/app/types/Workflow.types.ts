@@ -21,7 +21,7 @@ export interface WorkflowTemplate {
   template_prompt: string;
   query_prompt: string;
   config: WorkflowConfig;
-  nodes: Node[];
+  nodes: RegularWorkflowNodeType[] | ForEachWorkflowNodeType[];
   edges: Edge[];
   viewport: Viewport;
   created_at: string;

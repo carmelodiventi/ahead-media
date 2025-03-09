@@ -1,7 +1,11 @@
 {
   "private": true,
   "name": "content-crafters",
-  "scripts": {},
+  "scripts": {
+    "start": "remix-serve ./build",
+    "build": "remix build",
+    "dev": "remix dev"
+  },
   "type": "module",
   "resolutions": {
     "@pinecone-database/pinecone": "4.0.0"

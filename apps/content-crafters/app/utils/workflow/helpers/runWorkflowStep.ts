@@ -4,6 +4,7 @@ import { validateStepConfig } from './validateStepConfig';
 import { buildPromptTemplate } from './buildPromptTemplate';
 import { formatPromptWithInputs } from './formatPromptWithInputs';
 import { runLlmStep } from './runLlmStep';
+import logger from "../../logger";
 
 /**
  * Executes a single workflow step.
@@ -19,7 +20,7 @@ export async function runWorkflowStep(
   step: WorkflowNode,
   inputs: Record<string, any>,
   isOutputNode: boolean,
-  onUpdate?: (update: any) => void,
+  onUpdate?: (update: any) => void
 ): Promise<any> {
   try {
     // Validate the step configuration and inputs
@@ -34,10 +35,16 @@ export async function runWorkflowStep(
       inputs
     );
 
-    console.log('Formatted Prompt:', formattedPrompt);
+    console.info('Formatted Prompt ==========>', `\n` + formattedPrompt + `\n`);
 
     // Run the LLM step with the formatted prompt
-    const result = await runLlmStep(llm, step, formattedPrompt, isOutputNode, onUpdate);
+    const result = await runLlmStep(
+      llm,
+      step,
+      formattedPrompt,
+      isOutputNode,
+      onUpdate
+    );
 
     // If the LLM step fails, log and return null
     if (result === null) {

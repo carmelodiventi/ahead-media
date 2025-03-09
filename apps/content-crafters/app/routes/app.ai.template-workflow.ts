@@ -1,4 +1,4 @@
-import {ActionFunction, ActionFunctionArgs, redirect} from '@remix-run/node';
+import {ActionFunctionArgs, redirect} from '@remix-run/node';
 
 import { DocumentStatus, DocumentTypes } from '../types/Document.types';
 import { PostgrestError } from '@supabase/supabase-js';
@@ -38,6 +38,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     if (document.doc_status === DocumentStatus.Draft) {
       runWorkflow(template, document.metadata.initial_inputs, document.query, (data) => {
+
         emitter.emit(
           `${document.id}-${template.id}`,
           JSON.stringify({
@@ -45,6 +46,9 @@ export async function action({ request }: ActionFunctionArgs) {
             data,
           })
         );
+
+      }).then(res => {
+        console.log(JSON.stringify(res, null, 2))
       });
     }
 

@@ -13,7 +13,8 @@ import {
   DotsHorizontalIcon,
   DownloadIcon,
   Link1Icon,
-  MagnifyingGlassIcon, PlayIcon,
+  MagnifyingGlassIcon,
+  PlayIcon,
   Share1Icon,
 } from '@radix-ui/react-icons';
 import { toast, toast as notify } from 'sonner';
@@ -24,6 +25,7 @@ import RichTextEditor from '../components/documents/richtext-editor/RichTextEdit
 import supabase from '../utils/supabase';
 import documentStore from '../store/documentStore';
 import { useStore } from 'zustand';
+import { emitter } from '../utils/emitter.server';
 
 export const meta = ({ data }: { data: { document: DocumentTypes } }) => {
   return [
@@ -44,6 +46,7 @@ export async function loader({ params }: { params: { id: string } }) {
   if (error || !document || !document.metadata) {
     return redirect('/app/documents');
   }
+
 
   return {
     document,
@@ -215,9 +218,9 @@ const DocumentPreview = () => {
     formData.append('id', documentId);
     fetcher.submit(formData, {
       method: 'post',
-      action: `/app/ai/template-workflow`
-    })
-  }
+      action: `/app/ai/template-workflow`,
+    });
+  };
 
   return (
     <Flex>

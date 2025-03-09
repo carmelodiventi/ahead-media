@@ -17,42 +17,63 @@ export async function runLlmStep(
 ): Promise<any> {
   try {
     let result;
+    let fullResponse = '';
+
     if (stepConfig.data.stream) {
       const stream = await llm.stream(
         formattedPrompt,
         stepConfig.data.llmParams
       );
-      let fullResponse = '';
 
       for await (const chunk of stream) {
         if (chunk?.content) {
-          process.stdout.write(chunk.content as string); // Write chunk to stdout
+          // process.stdout.write(chunk.content as string); // Write chunk to stdout
           fullResponse += chunk.content;
 
-          if (onUpdate && isOutputNode) {
+          if (onUpdate && !isOutputNode) {
             onUpdate({
               status: 'processing',
               data: { content: chunk.content },
             });
           }
+
+          if (onUpdate && isOutputNode) {
+            onUpdate({
+              status: 'generating',
+              data: { content: chunk.content },
+            });
+          }
         }
       }
-
-      result = parseResponse(fullResponse, stepConfig);
     } else {
       result = await llm.invoke(formattedPrompt, stepConfig.data.llmParams);
+      fullResponse = Array.isArray(result.content) ? result.content.join('') : result.content.toString();
 
       if (onUpdate && isOutputNode) {
         onUpdate({
+          status: 'generating',
+          data: { content: result.content },
+        });
+      }
+
+      if (onUpdate && !isOutputNode) {
+        onUpdate({
           status: 'processing',
-          data: {
-            content: result.content
-          },
-        }); // Send intermediate chunk to the client
+          data: { content: result.content },
+        });
       }
     }
 
-    return result;
+    const parsedResult = parseResponse(fullResponse, stepConfig);
+
+    if (onUpdate && isOutputNode) {
+      onUpdate({
+        status: 'complete',
+        data: { content: parsedResult },
+      });
+    }
+
+    return parsedResult;
   } catch (error) {
     console.error(`Error in step ${stepConfig.data.name}:`, error);
     return null;

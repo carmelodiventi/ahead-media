@@ -15,7 +15,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     // Vite takes care of building everything.
-    "noEmit": true
+    "noEmit": true,
+    "sourceMap": true
   },
   "include": [],
   "files": [],
