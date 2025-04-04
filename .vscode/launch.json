@@ -1,0 +1,37 @@
+{
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch Content Crafters",
+        "runtimeExecutable": "yarn",
+        "args": ["dev"],
+        "cwd": "${workspaceFolder}/apps/content-crafters",
+        "env": {
+          "NODE_ENV": "development"
+        },
+        "console": "integratedTerminal"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch Info Scribe Hub",
+        "runtimeExecutable": "yarn",
+        "args": ["dev"],
+        "cwd": "${workspaceFolder}/apps/info-scribe-hub",
+        "env": {
+          "NODE_ENV": "development"
+        },
+        "console": "integratedTerminal",
+        "sourceMaps": true,
+        "resolveSourceMapLocations": [
+          "${workspaceFolder}/**",
+          "!**/node_modules/**"
+        ],
+        "skipFiles": [
+          "<node_internals>/**",
+          "**/node_modules/**"
+        ]
+      }
+    ]
+  }
