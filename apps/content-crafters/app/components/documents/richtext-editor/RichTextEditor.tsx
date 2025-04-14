@@ -1,5 +1,5 @@
 import './RichTextEditor.styles.css';
-import { Box, Button, Dialog, Flex, Grid } from '@radix-ui/themes';
+import { Box, Dialog, Grid } from '@radix-ui/themes';
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
