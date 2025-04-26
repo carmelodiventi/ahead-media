@@ -1,3 +1,3 @@
-[submodule "apps/info-scribe-hub"]
-	path = apps/info-scribe-hub
-	url = git@github.com:carmelodiventi/info-scribe-hub.git
+[submodule "apps/contents-crafters"]
+	path = apps/contents-crafters
+	url = git@github.com:carmelodiventi/contents-crafters.git
