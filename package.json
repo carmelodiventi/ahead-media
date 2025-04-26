@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev:content-crafters": "nx run content-crafters:dev"
+    "dev:content-crafters": "nx run content-crafters:dev",
+    "dev:contents-crafters": "nx run contents-crafters:dev"
   },
   "private": true,
   "devDependencies": {
