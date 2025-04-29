@@ -3,8 +3,9 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev:content-crafters": "nx run content-crafters:dev",
-    "dev:contents-crafters": "nx run contents-crafters:dev"
+    "dev:scribe-ai": "nx run scribe-ai:dev",
+    "dev:contents-crafters": "nx run contents-crafters:dev",
+    "build:platform-cms": "nx run platform-cms:build"
   },
   "private": true,
   "devDependencies": {

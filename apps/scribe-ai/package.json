@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "content-crafters",
+  "name": "scribe-ai",
   "scripts": {
     "start": "remix-serve ./build",
     "build": "remix build",
