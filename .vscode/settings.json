@@ -26,6 +26,9 @@
     },
     {
       "text": "9. **Creating files:** When creating a new file, place it in a folder named after the file's base name with a capitalized first letter (e.g., File/File.txt). Also include an index.ts that exports the main module (e.g., File/index.ts)."
+    },
+    {
+      "text": "10. **Plan Before Execution:** Before making any changes, generate a concise plan outlining the intended modifications and rationale. Present the plan for approval (e.g., 'Shall I proceed with this plan?') before executing. If the plan is unclear or too broad, request clarification. This ensures alignment and reduces unnecessary rework or discarded output."
     }
   ]
 }
