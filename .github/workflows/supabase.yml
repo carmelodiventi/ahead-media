@@ -2,6 +2,11 @@ name: Ping Supabase to Prevent Pausing
 env:
   SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
   SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  run: |
+    echo "SUPABASE_URL length: ${#SUPABASE_URL}"
+    echo "SUPABASE_KEY length: ${#SUPABASE_KEY}"
+    if [ -z "$SUPABASE_URL" ]; then echo "SUPABASE_URL is empty!"; fi
+    if [ -z "$SUPABASE_KEY" ]; then echo "SUPABASE_KEY is empty!"; fi
 on:
   schedule:
     - cron: '0 9 * * 1,4' # Runs at 9:00 AM UTC every Monday and Thursday
