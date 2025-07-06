@@ -14,45 +14,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      # Step 2: Set up Deno
+      - name: Set up Deno
+        uses: denoland/setup-deno@v1
         with:
-          node-version: '18' # Use Node.js 18
+          deno-version: v1.x
 
-      # Step 3: Install Supabase Client
-      - name: Install Supabase Client
-        run: npm install @supabase/supabase-js --force
-
-      # Step 4: Ping Supabase
-      - name: Ping Supabase
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }} # Supabase project URL
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }} # Supabase service role key
+      # Step 3: Write Deno script
+      - name: Write Deno script
         run: |
-          node -e "
-          (async () => {
-            try {
-              // Debugging: Log environment variables (optional)
-              console.log('Supabase URL:', process.env.SUPABASE_URL);
-              console.log('Supabase Key:', process.env.SUPABASE_KEY);
+          cat <<'EOF' > ping_supabase.js
+          const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+          const SUPABASE_KEY = Deno.env.get("SUPABASE_KEY");
 
-              // Import Supabase client
-              const { createClient } = require('@supabase/supabase-js');
-              const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+          console.log("Supabase URL:", SUPABASE_URL);
+          console.log("Supabase Key:", SUPABASE_KEY);
 
-              // Ping Supabase by querying a table (e.g., 'songs')
-              const { data, error } = await supabase.from('your_table').select('*').limit(10);
+          import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-              // Handle errors
-              if (error) throw error;
+          const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-              // Log success
-              console.log('Ping successful:', data);
-            } catch (err) {
-              // Log and exit with error
-              console.error('Error pinging Supabase:', err.message);
-              process.exit(1);
-            }
-          })();
-          "
+          const { data, error } = await supabase.from("documents").select("*").limit(10);
+
+          if (error) {
+            console.error("Error pinging Supabase:", error.message);
+            Deno.exit(1);
+          }
+
+          console.log("Ping successful:", data);
+          EOF
+
+      # Step 4: Run Deno script
+      - name: Ping Supabase with Deno
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: deno run --allow-net --allow-env ping_supabase.js
