@@ -1,5 +1,7 @@
 name: Ping Supabase to Prevent Pausing
-
+env:
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 on:
   schedule:
     - cron: '0 9 * * 1,4' # Runs at 9:00 AM UTC every Monday and Thursday
